@@ -46,6 +46,7 @@ variable fx_upper_plane equal c_fx_upper_plane
 compute ke_mobile mobile_group ke/atom
 compute pe_mobile mobile_group pe/atom
 compute temp_mobile mobile_group temp
+compute disp_nanoparticle nanoparticle_group displace/atom
 
 # EAM potentials
 pair_style eam
@@ -55,7 +56,7 @@ pair_coeff * * Cu_u3.eam
 dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
 
 # Trace the trajectory of the nanoparticle during the simulation
-dump nanoparticle_trajectory nanoparticle_group custom 100 nanoparticle_trajectory.lammpstrj id type x y z
+dump nanoparticle_trajectory nanoparticle_group custom 100 nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
 
 # Thermostat 
 fix thermostat_upper upper_plane_group langevin 300 300 0.1 48279
