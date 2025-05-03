@@ -10,6 +10,7 @@ python = ">=3.10,<=3.12.3"
 numpy = "^2.2.5"
 matplotlib = "^3.10.1"
 ovito = "^3.12.2"
+pandas = "^2.2.3"
 
 [tool.poetry.group.dev.dependencies]
 
