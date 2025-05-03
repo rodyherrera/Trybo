@@ -28,26 +28,38 @@ create_atoms 1 region upper_plane
 group lower_plane_group region lower_plane
 group nanoparticle_group region nanoparticle
 group upper_plane_group region upper_plane
+group mobile_group subtract all lower_plane_group upper_plane_group
 
 # Fix bottom plane
 fix hold_lower_plane lower_plane_group setforce 0.0 0.0 0.0
 
-# Move upper plane (for now, velocity in x)
-velocity upper_plane_group set 0.05 0.0 0.0 units box
+# Move upper plane (for now, rigid translation in x)
 fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
+
+# Computers for friction (sum of fx on upper planes)
+compute fx_upper_plane upper_plane_group reduce sum fx
+variable fx_upper_plane equal c_fx_upper_plane
+
+# Computes for energy and temperature (mobile_group atoms)
+compute ke_mobile mobile_group ke/atom
+compute pe_mobile mobile_group pe/atom
+compute temp_mobile mobile_group temp
 
 # EAM potentials
 pair_style eam
 pair_coeff * * Cu_u3.eam
 
 # Dump
-dump 1 all atom 100 trajectory.lammpstrj
+dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
 
-# Fix temperature for mobile atom_style
-group mobile subtract all lower_plane_group upper_plane_group
-fix thermo_mobile mobile nvt temp 300 300 0.1
+# Thermostat for mobile atoms
+fix thermo_mobile mobile_group nvt temp 300 300 0.1
 
-# Energy minimization
+# Output thermo information: step, temperature, potential energy, friction force
+thermo_style custom step temp pe v_fx_upper_plane
+thermo 100
+
+# Energy minimization (to relax initial structure)
 min_style cg
 minimize 1e-4 1e-6 1000 10000
 
