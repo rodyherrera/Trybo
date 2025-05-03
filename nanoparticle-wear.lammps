@@ -87,8 +87,11 @@ variable fz_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_pla
 # Friction force measurement (x component)
 variable fx_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[1]
 
+# Calculate coefficient of friction
+variable coefficient_friction equal abs(v_fx_nanoparticle_upper_plane / v_fz_nanoparticle_upper_plane)
+
 # Output thermo information: step, temperature, potential energy, friction force
-thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane
+thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction
 thermo 100
 
 # In molecular dynamics simulations, atoms can sometimes leave the 
