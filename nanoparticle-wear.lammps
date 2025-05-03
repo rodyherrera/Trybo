@@ -1,0 +1,57 @@
+# System configuration
+units metal
+dimension 3
+boundary p p f
+atom_style atomic
+
+# Simulation box 
+lattice fcc 3.615
+region simulation_box block 0 50 0 50 0 50
+create_box 1 simulation_box
+
+# Mass for Cu
+mass 1 63.546
+
+# Lower plane
+region lower_plane block 5 45 5 45 0 5
+create_atoms 1 region lower_plane
+
+# Nanoparticle
+region nanoparticle sphere 25 25 25 18
+create_atoms 1 region nanoparticle
+
+# Upper plane
+region upper_plane block 5 45 5 45 45 50
+create_atoms 1 region upper_plane
+
+# Groups
+group lower_plane_group region lower_plane
+group nanoparticle_group region nanoparticle
+group upper_plane_group region upper_plane
+
+# Fix bottom plane
+fix hold_lower_plane lower_plane_group setforce 0.0 0.0 0.0
+
+# Move upper plane (for now, velocity in x)
+velocity upper_plane_group set 0.05 0.0 0.0 units box
+fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
+
+# EAM potentials
+pair_style eam
+pair_coeff * * Cu_u3.eam
+
+# Dump
+dump 1 all atom 100 trajectory.lammpstrj
+
+# Fix temperature for mobile atom_style
+group mobile subtract all lower_plane_group upper_plane_group
+fix thermo_mobile mobile nvt temp 300 300 0.1
+
+# Energy minimization
+min_style cg
+minimize 1e-4 1e-6 1000 10000
+
+# Run
+run 1000
+
+print "OK"
