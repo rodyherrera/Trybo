@@ -56,7 +56,7 @@ dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
 fix thermo_mobile mobile_group nvt temp 300 300 0.1
 
 # Output thermo information: step, temperature, potential energy, friction force
-thermo_style custom step temp pe v_fx_upper_plane
+thermo_style custom step temp press etotal pe ke v_fx_upper_plane
 thermo 100
 
 # Energy minimization (to relax initial structure)
