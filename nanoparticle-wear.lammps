@@ -84,8 +84,11 @@ variable z_upper_plane equal c_z_upper_plane
 compute normal_force_nanoparticle_upper_plane nanoparticle_group group/group upper_plane_group
 variable fz_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[3]
 
+# Friction force measurement (x component)
+variable fx_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[1]
+
 # Output thermo information: step, temperature, potential energy, friction force
-thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane
+thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane
 thermo 100
 
 # In molecular dynamics simulations, atoms can sometimes leave the 
@@ -101,9 +104,9 @@ min_style cg
 minimize 1e-4 1e-6 1000 10000
 
 # System balancing
-#run 5000
+run 5000
 
 # Run
-run 100
+run 1000
 
 print "OK"
