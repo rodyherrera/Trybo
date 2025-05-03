@@ -135,7 +135,7 @@ thermo 100
 # With thermo_modify lost ignore, LAMMPS simply ignores the loss of atoms when 
 # calculating thermodynamic properties (such as temperature, energy, pressure, etc.) 
 # and continues simulating without stopping.
-# thermo_modify lost ignore
+thermo_modify lost ignore
 
 # Energy minimization (to relax initial structure)
 min_style cg

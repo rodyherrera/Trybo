@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "nanoparticle-wear"
+version = "0.1.0"
+description = ""
+authors = ["rodyherrera <contact@rodyherrera.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<=3.12.3"
+numpy = "^2.2.5"
+matplotlib = "^3.10.1"
+ovito = "^3.12.2"
+
+[tool.poetry.group.dev.dependencies]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

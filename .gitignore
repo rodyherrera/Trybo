@@ -3,3 +3,4 @@ log.lammps
 lmp
 *.lammpstrj
 *.txt
+*.lock
