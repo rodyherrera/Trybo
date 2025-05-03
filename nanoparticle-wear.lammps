@@ -4,6 +4,9 @@ dimension 3
 boundary p p f
 atom_style atomic
 
+# LAMMPS build with GPU cmake option
+package gpu 1
+
 # Simulation box 
 lattice fcc 3.615
 region simulation_box block 0 50 0 50 0 50
@@ -49,7 +52,7 @@ compute temp_mobile mobile_group temp
 compute disp_nanoparticle nanoparticle_group displace/atom
 
 # EAM potentials
-pair_style eam
+pair_style eam/gpu
 pair_coeff * * Cu_u3.eam
 
 # Dump
@@ -79,11 +82,11 @@ fix thermostat_upper upper_plane_group langevin 300 300 0.1 48279
 # Without normal force, the surfaces or nanoparticle barely touch, 
 # resulting in almost no or no friction. Many tribological properties, 
 # such as coefficient of friction and wear, depend on normal loading.
-variable Fz_normal equal -10.0
+variable Fz_normal equal -500.0
 fix add_normal_force upper_plane_group addforce 0.0 0.0 ${Fz_normal}
 
 # Movement for friction
-fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
+fix move_upper_plane upper_plane_group move linear 0.2 0.0 0.0 units box
 
 # Z average position for upper plane
 compute z_upper_plane upper_plane_group reduce ave z
@@ -119,6 +122,6 @@ minimize 1e-4 1e-6 1000 10000
 run 5000
 
 # Run
-run 1000
+run 100000
 
 print "OK"
