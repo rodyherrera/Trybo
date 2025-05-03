@@ -52,8 +52,24 @@ dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
 # Thermostat for mobile atoms
 fix thermo_mobile mobile_group nvt temp 300 300 0.1
 
+# Normal force to upper plane
+# It is applied to the upper plane to simulate the pressure or 
+# load that, in a real experiment, one surface exerts on another.
+# Without normal force, the surfaces or nanoparticle barely touch, 
+# resulting in almost no or no friction. Many tribological properties, 
+# such as coefficient of friction and wear, depend on normal loading.
+variable Fz_normal equal -10.0
+fix add_normal_force upper_plane_group addforce 0.0 0.0 ${Fz_normal}
+
+# Movement for friction
+fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
+
+# Z average position for upper plane
+compute z_upper_plane upper_plane_group reduce ave z
+variable z_upper_plane equal c_z_upper_plane
+
 # Output thermo information: step, temperature, potential energy, friction force
-thermo_style custom step temp press etotal pe ke v_fx_upper_plane
+thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane
 thermo 100
 
 # Energy minimization (to relax initial structure)
@@ -62,9 +78,6 @@ minimize 1e-4 1e-6 1000 10000
 
 # System balancing
 run 5000
-
-# Move upper plane (for now, rigid translation in x)
-fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
 
 # Run
 run 1000
