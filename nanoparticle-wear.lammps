@@ -30,6 +30,11 @@ group nanoparticle_group region nanoparticle
 group upper_plane_group region upper_plane
 group mobile_group subtract all lower_plane_group upper_plane_group
 
+# Save nanoparticle IDs and initial positions
+dump nanoparticle_init nanoparticle_group custom 1 nanoparticle_init.txt id type x y z
+run 0
+undump nanoparticle_init
+
 # Fix bottom plane
 fix hold_lower_plane lower_plane_group setforce 0.0 0.0 0.0
 
@@ -48,6 +53,9 @@ pair_coeff * * Cu_u3.eam
 
 # Dump
 dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
+
+# Trace the trajectory of the nanoparticle during the simulation
+dump nanoparticle_trajectory nanoparticle_group custom 100 nanoparticle_trajectory.lammpstrj id type x y z
 
 # Thermostat 
 fix thermostat_upper upper_plane_group langevin 300 300 0.1 48279
