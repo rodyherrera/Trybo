@@ -33,9 +33,6 @@ group mobile_group subtract all lower_plane_group upper_plane_group
 # Fix bottom plane
 fix hold_lower_plane lower_plane_group setforce 0.0 0.0 0.0
 
-# Move upper plane (for now, rigid translation in x)
-fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
-
 # Computers for friction (sum of fx on upper planes)
 compute fx_upper_plane upper_plane_group reduce sum fx
 variable fx_upper_plane equal c_fx_upper_plane
@@ -62,6 +59,12 @@ thermo 100
 # Energy minimization (to relax initial structure)
 min_style cg
 minimize 1e-4 1e-6 1000 10000
+
+# System balancing
+run 5000
+
+# Move upper plane (for now, rigid translation in x)
+fix move_upper_plane upper_plane_group move linear 0.05 0.0 0.0 units box
 
 # Run
 run 1000
