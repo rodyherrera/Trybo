@@ -49,7 +49,7 @@ group mobile_group subtract all lower_plane_group upper_plane_group
 
 # EAM potentials
 pair_style eam/gpu
-pair_coeff * * Cu_u3.eam
+pair_coeff * * potentials/Cu_u3.eam
 
 neigh_modify delay 2 every 1 check yes page 1000000 one 100000 binsize 2.5
 delete_atoms overlap 0.01 nanoparticle_group upper_plane_group
