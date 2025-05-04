@@ -49,6 +49,7 @@ cmake ../cmake \
     -DCMAKE_C_COMPILER=gcc \
     -DPKG_MOLECULE=on \
     -DPKG_KSPACE=on \
+    -DPKG_PTM=on \
     -DPKG_MANYBODY=on \
     -DPKG_RIGID=on \
     -DPKG_MISC=on \

@@ -295,6 +295,23 @@ fix hotspot_monitor all ave/time 1000 1 1000 c_hotspots_count file ${output_dire
 # Dump para visualizar puntos calientes
 dump hotspots all custom ${analysis_related_dump_frequency} ${output_directory}/hotspots.dump id type x y z c_ke_hotspots v_is_hotspot
 
+# Calculate the coordination number for each atom (how many neighbors it has 
+# within 3.3 units of distance), to identify structural rearrangement.
+# In addition, changes in the coordination number often indicate structural deformations (mechanical wear).
+compute coord all coord/atom cutoff 3.3
+dump coord_dump all custom ${analysis_related_dump_frequency} ${output_directory}/coordination.dump id type x y z c_coord
+
+# Calculate statistics from coordination numbers
+compute coord_avg all reduce ave c_coord
+compute coord_min all reduce min c_coord
+compute coord_max all reduce max c_coord
+fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max file ${output_directory}/coordination_stats.txt
+
+# Trajectory visualization with structure identifiers using PTM (Polyhedral Template Matching)
+# Used to analyze mechanical wear, it allows you to see exactly where and how the crystalline structure changes during friction.
+compute ptm all ptm/atom fcc 0.15
+dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/ptm.dump id type x y z c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
