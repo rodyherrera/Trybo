@@ -190,9 +190,14 @@ variable defect_percent equal 100.0*(c_center_symmetric_average/v_deformation_th
 # For FCC copper (first neighbor distance ~2.556 for network parameter 3.615)
 group cna_group subtract all lower_plane_group upper_plane_group
 
-# Uses a cutoff distance of 3.3 Å to identify nearest neighbors
+# Uses a cutoff distance of 3.3 A to identify nearest neighbors
 compute cna cna_group cna/atom 3.3
 dump cna_dump all custom 5000 cna.dump id type x y z c_cna
+
+# Von mises stress calculation
+compute vonmises all stress/atom NULL
+variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
+dump vonmises_dump all custom 2000 vonmises.dump id type x y z v_atoms_stress
 
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
