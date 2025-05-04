@@ -210,6 +210,12 @@ dump temperature_related all custom 2000 velocity_squared.dump id type x y z v_v
 variable total_energy atom c_ke_mobile+c_pe_mobile
 dump energy_dump mobile_group custom 2000 energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
+# Monitor the number of atoms in the nanoparticle cluster over time
+# We can monitor whether there is loss of atoms from the nanoparticle (wear), detect material transfer 
+# between surfaces, quantify wear based on the number of atoms lost, etc.
+variable contact_count equal "count(nanoparticle_group)"
+fix contact_monitor all ave/time 1000 1 1000 v_contact_count file contact_count.txt
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
