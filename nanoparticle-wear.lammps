@@ -224,6 +224,15 @@ fix contact_monitor all ave/time 1000 1 1000 v_contact_count file contact_count.
 compute radial_distribution_function all rdf 100 1 1
 fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] file radial_distribution_function_output.txt mode vector
 
+# Calculate the average and maximum values ​​of the central symmetry parameter
+# It allows to characterize the local order/disorder of the atomic structure.
+compute center_symmetric_average all reduce ave c_center_symmetric
+compute center_symmetric_max all reduce max c_center_symmetric
+
+# Calculate average and maximum values ​​for von Mises stress values
+compute vonmises_average all reduce ave v_atoms_stress
+compute vonmises_max all reduce max v_atoms_stress
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
