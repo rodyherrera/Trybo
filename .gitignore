@@ -6,3 +6,4 @@ lmp
 *.lock
 *.zip
 *.binary
+*.dump
