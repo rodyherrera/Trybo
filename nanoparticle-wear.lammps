@@ -239,6 +239,9 @@ compute vonmises_max all reduce max v_atoms_stress
 compute velocity_squared_nanoparticle_average nanoparticle_group reduce ave v_velocity_squared_atom
 variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*25.464
 
+# Periodically record indicators related to nanoparticle wear.
+fix wear_monitor all ave/time 1000 1 1000 c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent file wear_data.txt
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
