@@ -3,7 +3,5 @@ lmp
 *.lammpstrj
 *.txt
 *.lock
-*.zip
-*.binary
-*.dump
 lammps/
+dumps/

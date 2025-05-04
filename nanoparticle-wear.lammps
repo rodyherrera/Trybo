@@ -5,6 +5,10 @@ boundary p p f
 atom_style atomic
 timestep 0.0001
 
+# Output directory for dumps
+variable output_directory string "dumps"
+shell mkdir ${output_directory}
+
 # Frequency used for trajectory.lammpstrj and nanoparticle_trajectory.lammpstrj
 variable dump_frequency equal 100
 
@@ -51,7 +55,7 @@ neigh_modify delay 2 every 1 check yes page 1000000 one 100000 binsize 2.5
 delete_atoms overlap 0.01 nanoparticle_group upper_plane_group
 
 # Save nanoparticle IDs and initial positions
-dump nanoparticle_init nanoparticle_group custom 1 nanoparticle_init.txt id type x y z
+dump nanoparticle_init nanoparticle_group custom 1 ${output_directory}/nanoparticle_init.txt id type x y z
 run 0
 undump nanoparticle_init
 
@@ -69,10 +73,10 @@ compute temp_mobile mobile_group temp
 compute disp_nanoparticle nanoparticle_group displace/atom
 
 # Dump
-dump 1 all custom ${dump_frequency} trajectory.lammpstrj id type x y z fx fy fz
+dump 1 all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
 
 # Trace the trajectory of the nanoparticle during the simulation
-dump nanoparticle_trajectory nanoparticle_group custom ${dump_frequency} nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
+dump nanoparticle_trajectory nanoparticle_group custom ${dump_frequency} ${output_directory}/nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
 
 # Thermostat 
 fix thermostat_upper upper_plane_group langevin 300 300 1.0 48279
@@ -176,12 +180,12 @@ variable coef_diff equal v_coefficient_friction-1.0
 variable coef_shift equal 0.5*(v_coef_diff+sqrt(v_coef_diff*v_coef_diff+0.0001))
 variable coefficient_friction_capped equal v_coefficient_friction-v_coef_shift
 
-fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficient_friction_capped file friction_data.txt
+fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficient_friction_capped file ${output_directory}/friction_data.txt
 
 # Identify structural defects (direct indicator of wear)
 # Statistical calculation of wear based on centro-symmetric
 compute center_symmetric all centro/atom 12
-dump center_symmetric_dump all custom ${analysis_related_dump_frequency} center_symmetric.dump id type x y z c_center_symmetric
+dump center_symmetric_dump all custom ${analysis_related_dump_frequency} ${output_directory}/center_symmetric.dump id type x y z c_center_symmetric
 
 variable deformation_threshold equal 8.0
 compute center_symmetric_sumsq all reduce sumsq c_center_symmetric
@@ -199,29 +203,29 @@ group cna_group subtract all lower_plane_group upper_plane_group
 
 # Uses a cutoff distance of 3.3 A to identify nearest neighbors
 compute cna cna_group cna/atom 3.3
-dump cna_dump all custom ${analysis_related_dump_frequency} cna.dump id type x y z c_cna
+dump cna_dump all custom ${analysis_related_dump_frequency} ${output_directory}/cna.dump id type x y z c_cna
 
 # Von mises stress calculation
 compute vonmises all stress/atom NULL
 variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
-dump vonmises_dump all custom ${analysis_related_dump_frequency} vonmises.dump id type x y z v_atoms_stress
+dump vonmises_dump all custom ${analysis_related_dump_frequency} ${output_directory}/vonmises.dump id type x y z v_atoms_stress
 
 # Analysis of the Squared Velocity Calculation for "hot spots" or regions of high kinetic energy in the system,
 # energy transfer during processes such as friction, local thermal fluctuations during the simulation or
 # non-uniform distribution of kinetic energy in the system.
 compute velocity_squared all property/atom vx vy vz
 variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
-dump temperature_related_dump all custom ${analysis_related_dump_frequency} velocity_squared.dump id type x y z v_velocity_squared_atom
+dump temperature_related_dump all custom ${analysis_related_dump_frequency} ${output_directory}/velocity_squared.dump id type x y z v_velocity_squared_atom
 
 # Calculate and save the total energy per atom for the mobile group
 variable total_energy atom c_ke_mobile+c_pe_mobile
-dump energy_dump mobile_group custom ${analysis_related_dump_frequency} energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
+dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
 # Monitor the number of atoms in the nanoparticle cluster over time
 # We can monitor whether there is loss of atoms from the nanoparticle (wear), detect material transfer 
 # between surfaces, quantify wear based on the number of atoms lost, etc.
 variable contact_count equal "count(nanoparticle_group)"
-fix contact_monitor all ave/time 1000 1 1000 v_contact_count file contact_count.txt
+fix contact_monitor all ave/time 1000 1 1000 v_contact_count file ${output_directory}/contact_count.txt
 
 # Radial Distribution Function (RDF) for analyzing atomic structure
 # It applies to all atoms (all), with a 100 number of divisions (bins) in 
@@ -229,7 +233,7 @@ fix contact_monitor all ave/time 1000 1 1000 v_contact_count file contact_count.
 # We can identify changes in the structure during the simulation and characterize 
 # structural changes induced by friction.
 compute radial_distribution_function all rdf 100 1 1
-fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] file radial_distribution_function_output.txt mode vector
+fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] file ${output_directory}/radial_distribution_function_output.txt mode vector
 
 # Calculate the average and maximum values ​​of the central symmetry parameter
 # It allows to characterize the local order/disorder of the atomic structure.
@@ -246,7 +250,7 @@ compute velocity_squared_nanoparticle_average nanoparticle_group reduce ave v_ve
 variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*25.464
 
 # Periodically record indicators related to nanoparticle wear.
-fix wear_monitor all ave/time 1000 1 1000 c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent file wear_data.txt
+fix wear_monitor all ave/time 1000 1 1000 c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent file ${output_directory}/wear_data.txt
 
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
