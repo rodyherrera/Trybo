@@ -6,7 +6,15 @@ atom_style atomic
 timestep 0.0001
 
 # Output directory for dumps
-variable output_directory string "dumps"
+variable dumps_directory string "dumps"
+shell mkdir ${dumps_directory}
+
+# Autogenerate timestamp from system time
+shell "date +%Y-%m-%d_%H-%M-%S > timestamp.txt"
+variable timestamp file timestamp.txt
+shell "rm timestamp.txt"
+
+variable output_directory string "${dumps_directory}/${timestamp}"
 shell mkdir ${output_directory}
 
 # Frequency used for trajectory.lammpstrj and nanoparticle_trajectory.lammpstrj
