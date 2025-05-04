@@ -5,3 +5,4 @@ lmp
 *.lock
 lammps/
 dumps/
+*.binary

@@ -272,7 +272,7 @@ minimize 1e-6 1e-8 5000 50000
 run 20000
 
 # Reset files every 50,000 steps
-restart 50000 restart.*.binary
+restart 50000 ${output_directory}/restart.*.binary
 
 # Run
 run 1000000
