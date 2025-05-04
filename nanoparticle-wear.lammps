@@ -199,6 +199,13 @@ compute vonmises all stress/atom NULL
 variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
 dump vonmises_dump all custom 2000 vonmises.dump id type x y z v_atoms_stress
 
+# Analysis of the Squared Velocity Calculation for "hot spots" or regions of high kinetic energy in the system,
+# energy transfer during processes such as friction, local thermal fluctuations during the simulation or
+# non-uniform distribution of kinetic energy in the system.
+compute velocity_squared all property/atom vx vy vz
+variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
+dump temperature_related all custom 2000 velocity_squared.dump id type x y z v_velocity_squared_atom
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
