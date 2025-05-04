@@ -6,8 +6,7 @@ atom_style atomic
 timestep 0.0005
 
 # LAMMPS build with GPU cmake option
-# package gpu 1 neigh yes split 1.0 gpuID 0 tpa 64
-package gpu 1 neigh yes split 1.0 gpuID 0 tpa 32
+package gpu 1 neigh yes split 1.0 gpuID 0 tpa 128
 
 suffix gpu
 
@@ -184,6 +183,10 @@ minimize 1e-4 1e-6 1000 10000
 
 # System balancing
 run 5000
+
+# Reset files every 50,000 steps
+restart 50000 restart.*.binary
+write_data data.checkpoint.* every 50000
 
 # Run
 run 1000000
