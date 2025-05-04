@@ -41,11 +41,10 @@ class AnalysisConfig:
                 'c_coefficient', 
                 'friction'
             ]
-
 class LammpsLogParser:
     '''Parser for LAMMPS log files to extract data sections.'''
     def __init__(self, logfile: Union[str, Path]):
-        self.logfile = Path(logfile)
+        self.logfile = Path(logfile)    
         self._validate_file()
 
     def _validate_file(self) -> None:
