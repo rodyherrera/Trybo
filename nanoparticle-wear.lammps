@@ -5,6 +5,13 @@ boundary p p f
 atom_style atomic
 timestep 0.0001
 
+# Frequency used for trajectory.lammpstrj and nanoparticle_trajectory.lammpstrj
+variable dump_frequency equal 100
+
+# Used for center_symmmetric_dump, cna_dump, vonmises_dump
+# tempereature_related_dump, energy_dump
+variable analysis_related_dump_frequency equal 2000
+
 # LAMMPS build with GPU cmake option
 package gpu 1 neigh yes split 1.0 gpuID 0 tpa 64
 
@@ -62,10 +69,10 @@ compute temp_mobile mobile_group temp
 compute disp_nanoparticle nanoparticle_group displace/atom
 
 # Dump
-dump 1 all custom 100 trajectory.lammpstrj id type x y z fx fy fz
+dump 1 all custom ${dump_frequency} trajectory.lammpstrj id type x y z fx fy fz
 
 # Trace the trajectory of the nanoparticle during the simulation
-dump nanoparticle_trajectory nanoparticle_group custom 100 nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
+dump nanoparticle_trajectory nanoparticle_group custom ${dump_frequency} nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
 
 # Thermostat 
 fix thermostat_upper upper_plane_group langevin 300 300 1.0 48279
@@ -174,7 +181,7 @@ fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficien
 # Identify structural defects (direct indicator of wear)
 # Statistical calculation of wear based on centro-symmetric
 compute center_symmetric all centro/atom 12
-dump center_symmetric_dump all custom 5000 center_symmetric.dump id type x y z c_center_symmetric
+dump center_symmetric_dump all custom ${analysis_related_dump_frequency} center_symmetric.dump id type x y z c_center_symmetric
 
 variable deformation_threshold equal 8.0
 compute center_symmetric_sumsq all reduce sumsq c_center_symmetric
@@ -192,23 +199,23 @@ group cna_group subtract all lower_plane_group upper_plane_group
 
 # Uses a cutoff distance of 3.3 A to identify nearest neighbors
 compute cna cna_group cna/atom 3.3
-dump cna_dump all custom 5000 cna.dump id type x y z c_cna
+dump cna_dump all custom ${analysis_related_dump_frequency} cna.dump id type x y z c_cna
 
 # Von mises stress calculation
 compute vonmises all stress/atom NULL
 variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
-dump vonmises_dump all custom 2000 vonmises.dump id type x y z v_atoms_stress
+dump vonmises_dump all custom ${analysis_related_dump_frequency} vonmises.dump id type x y z v_atoms_stress
 
 # Analysis of the Squared Velocity Calculation for "hot spots" or regions of high kinetic energy in the system,
 # energy transfer during processes such as friction, local thermal fluctuations during the simulation or
 # non-uniform distribution of kinetic energy in the system.
 compute velocity_squared all property/atom vx vy vz
 variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
-dump temperature_related all custom 2000 velocity_squared.dump id type x y z v_velocity_squared_atom
+dump temperature_related_dump all custom ${analysis_related_dump_frequency} velocity_squared.dump id type x y z v_velocity_squared_atom
 
 # Calculate and save the total energy per atom for the mobile group
 variable total_energy atom c_ke_mobile+c_pe_mobile
-dump energy_dump mobile_group custom 2000 energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
+dump energy_dump mobile_group custom ${analysis_related_dump_frequency} energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
 # Monitor the number of atoms in the nanoparticle cluster over time
 # We can monitor whether there is loss of atoms from the nanoparticle (wear), detect material transfer 
