@@ -5,3 +5,4 @@ lmp
 *.txt
 *.lock
 *.zip
+*.binary
