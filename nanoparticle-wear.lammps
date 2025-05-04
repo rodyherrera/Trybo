@@ -90,11 +90,6 @@ fix nve_mobile mobile_group nve
 # helps dissipate heat in a realistic manner.
 fix thermo_nano nanoparticle_group langevin 300 300 5.0 23456
 
-# This helps avoid numerical instability. During tribology simulations, 
-# some atoms can suddenly acquire extremely high velocities, especially 
-# during impacts or sudden deformations.
-fix limit_velocity all temp/rescale 10 0 500 0.02 1.0
-
 # If the lower plane is completely fixed (setforce 0 0 0), it 
 # is not necessary to thermostat it, but if it has some mobility, it is.
 # fix thermo_lower lower_plane_group nvt temp 300 300 0.1
@@ -116,7 +111,7 @@ fix limit_velocity all temp/rescale 10 0 500 0.02 1.0
 # A = (x max - x min) * (y max - y min)
 # 
 # P = Fz / A
-variable Fz_normal equal -80.0
+variable Fz_normal equal -40.0
 fix add_normal_force upper_plane_group addforce 0.0 0.0 ${Fz_normal}
 
 # Oscillatory motion (fretting) for the upper plane
@@ -127,9 +122,10 @@ fix add_normal_force upper_plane_group addforce 0.0 0.0 ${Fz_normal}
 # high frequencies are expected to be used to observe phenomena in simulatable 
 # times. This is not realistic experimentally, but it is typical in MD.
 variable amplitude equal 5.0
-variable period equal 10000
+variable period equal 50000
 variable omega equal 2.0*PI/v_period
-variable x_pos equal v_amplitude*sin(v_omega*step)
+variable damp_factor equal 0.2 
+variable x_pos equal v_amplitude*sin(v_omega*step)*(1-v_damp_factor*sin(v_omega*step)*sin(v_omega*step))
 variable y_pos equal 0.0
 variable z_pos equal 0.0
 
@@ -170,7 +166,7 @@ variable fz_safe equal v_fz_min+v_shift
 variable coefficient_friction equal abs(v_fx_nanoparticle_upper_plane / v_fz_safe)
 
 # Upper limit to avoid extreme peaks
-variable coef_diff equal v_coefficient_friction-1.5
+variable coef_diff equal v_coefficient_friction-1.0
 variable coef_shift equal 0.5*(v_coef_diff+sqrt(v_coef_diff*v_coef_diff+0.0001))
 variable coefficient_friction_capped equal v_coefficient_friction-v_coef_shift
 
