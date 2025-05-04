@@ -216,6 +216,14 @@ dump energy_dump mobile_group custom 2000 energy.dump id type x y z c_ke_mobile 
 variable contact_count equal "count(nanoparticle_group)"
 fix contact_monitor all ave/time 1000 1 1000 v_contact_count file contact_count.txt
 
+# Radial Distribution Function (RDF) for analyzing atomic structure
+# It applies to all atoms (all), with a 100 number of divisions (bins) in 
+# the distance histogram, 1 single interaction between atoms of type 1.
+# We can identify changes in the structure during the simulation and characterize 
+# structural changes induced by friction.
+compute radial_distribution_function all rdf 100 1 1
+fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] file radial_distribution_function_output.txt mode vector
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
