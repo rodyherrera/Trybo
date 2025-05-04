@@ -206,6 +206,10 @@ compute velocity_squared all property/atom vx vy vz
 variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
 dump temperature_related all custom 2000 velocity_squared.dump id type x y z v_velocity_squared_atom
 
+# Calculate and save the total energy per atom for the mobile group
+variable total_energy atom c_ke_mobile+c_pe_mobile
+dump energy_dump mobile_group custom 2000 energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
