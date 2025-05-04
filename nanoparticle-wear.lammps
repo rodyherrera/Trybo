@@ -312,8 +312,19 @@ fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max fil
 compute ptm all ptm/atom fcc 0.15
 dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/ptm.dump id type x y z c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
 
-# Output thermo information: step, temperature, potential energy, friction force
-thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
+# Output thermo information
+thermo_style custom step time atoms &
+    temp c_temp_mobile v_nanoparticle_temperature &
+    press etotal pe ke &
+    v_fx_upper_plane v_z_upper_plane &
+    v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane &
+    v_coefficient_friction v_coefficient_friction_capped &
+    v_defect_percent c_center_symmetric_average &
+    c_vonmises_average c_vonmises_max &
+    c_hotspots_count v_contact_count &
+    v_transferred_to_lower_group v_transferred_to_upper_group &
+    v_x_pos c_coord_avg cpu cpuremain
+    
 thermo 1000
 
 # In molecular dynamics simulations, atoms can sometimes leave the 
