@@ -233,6 +233,12 @@ compute center_symmetric_max all reduce max c_center_symmetric
 compute vonmises_average all reduce ave v_atoms_stress
 compute vonmises_max all reduce max v_atoms_stress
 
+# Calculation of the specific temperature of the nanoparticle based on the mean square velocity of its atoms
+# This allows us to study heat transfer during friction processes, or in general understand the thermal 
+# behavior of the nanoparticle during wear simulation.
+compute velocity_squared_nanoparticle_average nanoparticle_group reduce ave v_velocity_squared_atom
+variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*25.464
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
