@@ -269,6 +269,22 @@ variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*
 # Periodically record indicators related to nanoparticle wear.
 fix wear_monitor all ave/time 1000 1 1000 c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent file ${output_directory}/wear_data.txt
 
+# Material Transfer Analysis between Top and Bottom Surfaces
+# In order to quantify adhesive wear (material transfer between surfaces), determine whether the nanoparticle 
+# loses more material to one surface than to another (I am not sure if it is valid to include the lower plane), 
+# correlate the material transfer with tribological parameters such as normal force or coefficient of friction 
+# and identify at what moments of the simulation the material transfer occurs.
+group initial_lower_group region lower_plane
+group initial_upper_group region upper_plane
+
+group current_lower_group dynamic all region lower_plane every 5000
+group current_upper_group dynamic all region upper_plane every 5000
+
+variable transferred_to_lower_group equal count(current_lower_group)-count(initial_lower_group)
+variable transferred_to_upper_group equal count(current_upper_group)-count(initial_upper_group)
+
+fix material_transfer all ave/time 5000 1 5000 v_transferred_to_lower_group v_transferred_to_upper_group file ${output_directory}/material_transfer.txt
+
 # Output thermo information: step, temperature, potential energy, friction force
 thermo_style custom step temp press etotal pe ke v_fx_upper_plane v_z_upper_plane v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane v_coefficient_friction v_coefficient_friction_capped
 thermo 1000
