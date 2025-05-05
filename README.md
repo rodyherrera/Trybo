@@ -11,6 +11,7 @@ To ensure compatibility, we provide a build script (`build_lammps_gpu.sh`) that 
 
 You must use this custom executable when running Trybo simulations to avoid compatibility errors and to benefit from GPU acceleration.
 
+## Tribological Analysis Capabilities
 #### 1. Wear Debris Analysis (Debris Clusters)
 The `compute cluster/atom` command identifies connected groups of atoms based on a cutoff distance, assinging a unique cluster id to each atom. The results are saved periodically in `debris_clusters.dump`. This enables the detection and analysis of material fragments that may detach from the main bodies (nanoparticle or planes) during friction.
 
