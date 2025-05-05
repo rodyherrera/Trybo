@@ -1,3 +1,5 @@
+![This is Trybo!](/screenshots/Trybo.png)
+
 ### Suite of atomic-level analyses within the Trybo simulation
 #### 1. Crystal Structure Analysis (CNA - Common Neighbor Analaysis)
 This analysis utilizes the `compute cna/atom` to assign a value to each atom indicating its local structural environment (e.g., perfect FCC, perfect HCP surface, or various defect types). The results are saved periodically for all atoms using `dump cna_dump`.
