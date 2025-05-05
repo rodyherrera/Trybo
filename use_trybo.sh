@@ -3,11 +3,20 @@
 echo "Trybo (May 5 2025 - Development - 1.0)"
 echo "Your suite of atomic-level analyses."
 
-# Check if LAMMPS executable exists
 if [ ! -f "./lammps/build/lmp" ]; then
     echo "Error: LAMMPS executable not found at ./lammps/build/lmp"
-    echo "Please build LAMMPS first using the toolchain/build_lammps_with_gpu.sh script"
-    exit 1
+    echo "Building LAMMPS automatically..."
+    
+    # Run the build script
+    bash toolchain/build_lammps_gpu.sh
+    
+    # Check if the build was successful
+    if [ $? -eq 0 ] && [ -f "./lammps/build/lmp" ]; then
+        echo "LAMMPS built successfully. Continuing..."
+    else
+        echo "LAMMPS build failed. Please check the build output."
+        exit 1
+    fi
 fi
 
 # Check if input file exists
