@@ -1,26 +1,18 @@
-from typing import Dict, Any, Optional
+from typing import Dict, Any
 from core.base_parser import BaseParser
 import numpy as np
 
 class StatisticalAnalyzer:
-    def __init__(self, parser: BaseParser, property_column: Optional[int] = None):
+    def __init__(self, parser: BaseParser):
         self.parser = parser
-        self.property_column = property_column
         
     def analyze(self, threshold: float = None) -> Dict[str, Any]:
         data = self.parser.get_data()
         
-        # Determine property column if not specified
-        if self.property_column is None:
-            # Try to get property column from specialized parser
-            if hasattr(self.parser, 'get_property_column_index'):
-                self.property_column = self.parser.get_property_column_index()
-            else:
-                # Default to last column (common in LAMMPS dumps)
-                self.property_column = data.shape[1] - 1
+        property_column = data.shape[1] - 1
         
         # Extract property values
-        values = data[:, self.property_column]
+        values = data[:, property_column]
         
         # Calculate statistics
         stats = {

@@ -18,7 +18,6 @@ class EnergyParser(BaseParser):
             line = file.readline()
             while line:
                 if 'ITEM: TIMESTEP' in line:
-                    # Obtener el timestep
                     timestep = int(file.readline().strip())
                     timesteps.append(timestep)
                     
