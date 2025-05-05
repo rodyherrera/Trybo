@@ -1,6 +1,6 @@
-import numpy as np
 from typing import List, Tuple
 from core.base_parser import BaseParser
+import numpy as np
 
 class CenterSymmetryParser(BaseParser):
     def __init__(self, filename: str, threshold: float = 8.0):
@@ -45,7 +45,7 @@ class CenterSymmetryParser(BaseParser):
 
             values = lines[i].split()
             
-            # Need at least id, type, x, y, z, centro
+            # Need at least id, type, x, y, z, center
             if len(values) >= 6:
                 try:
                     atom_id = int(values[0])
@@ -53,8 +53,8 @@ class CenterSymmetryParser(BaseParser):
                     x = float(values[2])
                     y = float(values[3])
                     z = float(values[4])
-                    centro = float(values[5])
-                    atom_data.append([atom_id, atom_type, x, y, z, centro])
+                    center = float(values[5])
+                    atom_data.append([atom_id, atom_type, x, y, z, center])
                 except (ValueError, IndexError) as e:
                     print(f'Error parsing line {i}: {lines[i]} - {e}')
 
