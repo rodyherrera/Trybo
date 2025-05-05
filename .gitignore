@@ -6,3 +6,6 @@ lmp
 lammps/
 dumps/
 *.binary
+
+__pycache__/*
+*.cpython*
