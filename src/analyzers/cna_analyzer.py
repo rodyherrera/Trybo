@@ -1,7 +1,7 @@
 from core.base_parser import BaseParser
 import numpy as np
 
-class CommonNeighborAnalysisVisualizer:
+class CommonNeighborAnalysisAnalyzer:
     '''
     CNA values:
     0: Unknown/Disordered
