@@ -5,25 +5,20 @@ import numpy as np
 class EnergyVisualizer:
     def __init__(self, parser: BaseParser):
         self.parser = parser
-        
-        timesteps, all_data, headers = parser.parse()
-
-        self.timesteps = timesteps
-        self.all_data = all_data
-        self.headers = headers
-
         self.statistics = self.calculate_statistics()
 
     def calculate_statistics(self):
+        headers = self.parser.get_headers()
+
         ke_stats = []
         pe_stats = []
         total_stats = []
 
-        ke_idx = self.headers.index('c_ke_mobile')
-        pe_idx = self.headers.index('c_pe_mobile')
-        total_idx = self.headers.index('v_total_energy')
+        ke_idx = headers.index('c_ke_mobile')
+        pe_idx = headers.index('c_pe_mobile')
+        total_idx = headers.index('v_total_energy')
         
-        for timestep_data in self.all_data:
+        for timestep_data in self.parser.get_data():
             ke_values = timestep_data[:, ke_idx]
             pe_values = timestep_data[:, pe_idx]
             total_values = timestep_data[:, total_idx]
@@ -65,11 +60,13 @@ class EnergyVisualizer:
         return statistics
 
     def plot_kinetic_energy(self):
+        timesteps = self.parser.get_timesteps()
+
         plt.figure(figsize=(12, 6))
         
-        plt.plot(self.timesteps, self.statistics['kinetic_energy']['average'], 'b--', label='Average')
+        plt.plot(timesteps, self.statistics['kinetic_energy']['average'], 'b--', label='Average')
         plt.fill_between(
-            self.timesteps, 
+            timesteps, 
             self.statistics['kinetic_energy']['min'], 
             self.statistics['kinetic_energy']['max'],
             color='blue', 
@@ -85,10 +82,12 @@ class EnergyVisualizer:
         plt.show()
 
     def plot_potential_energy(self):
+        timesteps = self.parser.get_timesteps()
+
         plt.figure(figsize=(12, 6))
-        plt.plot(self.timesteps, self.statistics['potential_energy']['average'], 'r--', label='Average')
+        plt.plot(timesteps, self.statistics['potential_energy']['average'], 'r--', label='Average')
         plt.fill_between(
-            self.timesteps, 
+            timesteps, 
             self.statistics['potential_energy']['min'],
             self.statistics['potential_energy']['max'],
             color='red',
@@ -105,10 +104,12 @@ class EnergyVisualizer:
         plt.show()
 
     def plot_total_energy(self):
+        timesteps = self.parser.get_timesteps()
+
         plt.figure(figsize=(12, 6))
-        plt.plot(self.timesteps, self.statistics['average'], 'g--', label='Average')
+        plt.plot(timesteps, self.statistics['average'], 'g--', label='Average')
         plt.fill_between(
-            self.timesteps, 
+            timesteps, 
             self.statistics['min'], 
             self.statistics['max'],
             color='green',
