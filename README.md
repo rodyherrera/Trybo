@@ -1,5 +1,16 @@
 ![This is Trybo!](/screenshots/Trybo.png)
 
+## Important Note on LAMMPS Compatibility
+The standard LAMMPS installation from package managers (such as apt) or pre-compiled binaries may not include all the features required by Trybo. Specifically, Trybo requires LAMMPS to be compiled with GPU acceleration and several additional packages.
+
+To ensure compatibility, we provide a build script (`build_lammps_gpu.sh`) that compiles LAMMPS with all necessary features. This script:
+
+- Will not modify or replace any existing LAMMPS installation on your system
+- Creates a custom LAMMPS executable in your current working directory
+- Configures all required packages and optimizations for Trybo
+
+You must use this custom executable when running Trybo simulations to avoid compatibility errors and to benefit from GPU acceleration.
+
 #### 1. Wear Debris Analysis (Debris Clusters)
 The `compute cluster/atom` command identifies connected groups of atoms based on a cutoff distance, assinging a unique cluster id to each atom. The results are saved periodically in `debris_clusters.dump`. This enables the detection and analysis of material fragments that may detach from the main bodies (nanoparticle or planes) during friction.
 
