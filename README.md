@@ -3,7 +3,7 @@
 ## Important Note on LAMMPS Compatibility
 The standard LAMMPS installation from package managers (such as apt) or pre-compiled binaries may not include all the features required by Trybo. Specifically, Trybo requires LAMMPS to be compiled with GPU acceleration and several additional packages.
 
-To ensure compatibility, we provide a build script (`build_lammps_gpu.sh`) that compiles LAMMPS with all necessary features. This script:
+To ensure compatibility, we provide a build script (`toolchain/build_lammps_gpu.sh`) that compiles LAMMPS with all necessary features. This script:
 
 - Will not modify or replace any existing LAMMPS installation on your system
 - Creates a custom LAMMPS executable in your current working directory
