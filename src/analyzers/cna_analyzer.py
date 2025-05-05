@@ -110,8 +110,8 @@ class CommonNeighborAnalysisAnalyzer:
             'names': [self.structure_names.get(t, f"Type {t}") for t in all_types],
             'counts1': [structure_counts1.get(t, 0) for t in all_types],
             'counts2': [structure_counts2.get(t, 0) for t in all_types],
-            'percentages1': [structure_counts1.get(t, 0)/total1*100 for t in all_types],
-            'percentages2': [structure_counts2.get(t, 0)/total2*100 for t in all_types]
+            'percentages1': [structure_counts1.get(t, 0)/total_atoms1*100 for t in all_types],
+            'percentages2': [structure_counts2.get(t, 0)/total_atoms2*100 for t in all_types]
         }
         
         return comparison

@@ -1,7 +1,6 @@
 from analyzers.hotspot_analyzer import HotspotAnalyzer
 from core.base_parser import BaseParser
 from mpl_toolkits.mplot3d import Axes3D
-import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
