@@ -146,3 +146,50 @@ class CentroSymmetricVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig(f'defect_3d_timestep_{current_timestep}.png', dpi=300)
+
+    def plot_defect_regions(self, timestep_idx=-1, threshold=None, group=None):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        current_timestep = timesteps[timestep_idx]
+        
+        # Get full data for this timestep
+        data = self.parser.get_data()[timestep_idx]
+
+        # Get defect regions
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            filtered_data = data[group_indices]
+            defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold, group)
+            all_x = filtered_data[:, 2]
+            all_y = filtered_data[:, 3]
+            all_z = filtered_data[:, 4]
+        else:
+            defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold)
+            all_x = data[:, 2]
+            all_y = data[:, 3]
+            all_z = data[:, 4]
+
+        defect_x = defect_data[:, 2]
+        defect_y = defect_data[:, 3]
+        defect_z = defect_data[:, 4]
+        defect_centro_symmetric = defect_data[:, 5]
+                
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(all_x, all_y, all_z, c='lightgray', s=5, alpha=0.1)
+        scatter = ax.scatter(defect_x, defect_y, defect_z, c=defect_centro_symmetric, cmap=self.centro_symmetric_cmap, s=30, alpha=1.0)
+        plt.colorbar(scatter, ax=ax, label='Centro-Symmetric Parameter')
+        ax.set_xlabel('X (Å)')
+        ax.set_ylabel('Y (Å)')
+        ax.set_zlabel('Z (Å)')
+        title = 'Crystal Defect Regions'
+        if threshold is not None:
+            title += f' (CS ≥ {threshold})'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        ax.set_title(f'{title} (Timestep {current_timestep})')
+        plt.tight_layout()
+        plt.savefig(f'defect_regions_timestep_{current_timestep}.png', dpi=300)
