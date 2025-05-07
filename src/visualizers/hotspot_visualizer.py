@@ -132,7 +132,7 @@ class HotspotVisualizer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
-        x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_distribution(timestep_idx)
+        x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_energy_distribution(timestep_idx)
         clusters, cluster_sizes, cluster_positions = self.analyzer.get_hotspot_clusters(timestep_idx)
         if not clusters:
             print(f'No hotspot clusters found in timestep {current_timestep}')
