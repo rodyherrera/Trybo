@@ -65,3 +65,44 @@ class EnergyVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig(f'{energy_type}_energy_distribution_timestep_{current_timestep}.png', dpi=300)
+
+    def plot_energy_evolution(self, group=None, energy_type='total'):
+        timesteps, average_energy, max_energy, min_energy, sum_energy = self.analyzer.get_energy_evolution(group, energy_type)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), sharex=True)
+        if energy_type == 'kinetic':
+            title_prefix = 'Kinetic'
+            y_label = 'Kinetic Energy (eV)'
+        elif energy_type == 'potential':
+            title_prefix = 'Potential'
+            y_label = 'Potential Energy (eV)'
+        else: 
+            title_prefix = 'Total'
+            y_label = 'Total Energy (eV)'
+        ax1.plot(timesteps, average_energy, 'b-', label='Average Energy')
+        ax1.plot(timesteps, max_energy, 'r-', label='Maximum Energy')
+        ax1.plot(timesteps, min_energy, 'g-', label='Minimum Energy')
+        ax1.fill_between(timesteps, min_energy, max_energy, color='blue', alpha=0.2, label='Min-Max Range')
+        
+        ax1.set_ylabel(f'Average {y_label}')
+        ax1.set_title(f'Evolution of Average {title_prefix} Energy')
+        if group is not None and group != 'all':
+            ax1.set_title(f'Evolution of Average {title_prefix} Energy - Group: {group}')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.legend()
+        
+        ax2.plot(timesteps, sum_energy, 'g-', label='System Energy')
+        
+        ax2.set_xlabel('Timestep')
+        ax2.set_ylabel(f'Total System {y_label}')
+        ax2.set_title(f'Evolution of System {title_prefix} Energy')
+        if group is not None and group != 'all':
+            ax2.set_title(f'Evolution of System {title_prefix} Energy - Group: {group}')
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.legend()
+        
+        plt.tight_layout()
+        
+        plt.savefig(f'{energy_type}_energy_evolution.png', dpi=300)
+        
+        plt.show()
+    
