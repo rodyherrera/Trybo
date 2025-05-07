@@ -35,8 +35,8 @@ class HotspotVisualizer:
 
         stats_text = (f'Total atoms: {stats["total_atoms"]}\n'
             f'Hotspot atoms: {stats["hotspot_count"]} ({stats["hotspot_ratio"]:.2f}%)\n'
-            f'Average energy: {stats["avg_energy"]:.2e} eV\n'
-            f'Hotspot avg energy: {stats["hotspot_avg_energy"]:.2e} eV\n'
+            f'Average energy: {stats["average_energy"]:.2e} eV\n'
+            f'Hotspot average energy: {stats["hotspot_average_energy"]:.2e} eV\n'
             f'Maximum energy: {stats["max_energy"]:.2e} eV')
 
         plt.text(0.95, 0.95, stats_text, transform=plt.gca().transAxes,
