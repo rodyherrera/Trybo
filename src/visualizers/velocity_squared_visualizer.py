@@ -162,3 +162,23 @@ class VelocitySquaredVisualizer:
         plt.suptitle(f'Temperature Heat Steps - Timestep {current_timestep}', y=1.05)
         plt.savefig(f'temperature_heatmaps_timestep_{current_timestep}.png', dpi=300)
         
+    def plot_temperature_by_groups(self):
+        timesteps, nano_average, nano_max, nano_min = self.analyzer.get_temperature_evolution('nanoparticle')
+        _, upper_average, _, _ = self.analyzer.get_temperature_evolution('upper_plane')
+        _, lower_average, _, _ = self.analyzer.get_temperature_evolution('lower_plane')
+        plt.figure(figsize=(12, 8))
+                
+        plt.plot(timesteps, nano_average, 'r-', label='Nanoparticle')
+        plt.plot(timesteps, upper_average, 'g-', label='Lower Plane')
+        plt.plot(timesteps, lower_average, 'b-', label='Upper Plane')
+        
+        plt.fill_between(timesteps, nano_min, nano_max, color='red', alpha=0.2)
+
+        plt.xlabel('Timestep')
+        plt.ylabel('Average Temperature (K)')
+        plt.title('Comparison of Temperature between Groups')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('temperature_by_groups.png', dpi=300)
+        
