@@ -156,3 +156,62 @@ class EnergyVisualizer:
         plt.tight_layout()
         
         plt.savefig(f'{energy_type}_energy_3d_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_high_energy_regions(self, timestep_idx=-1, threshold_percentile=95, energy_type='total', group=None):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        current_timestep = timesteps[timestep_idx]
+        data = self.parser.get_data()[timestep_idx]
+        
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            filtered_data = data[group_indices]
+            high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type, group)
+            all_x = filtered_data[:, 2]
+            all_y = filtered_data[:, 3]
+            all_z = filtered_data[:, 4]
+        else:
+            high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type)
+            all_x = data[:, 2]
+            all_y = data[:, 3]
+            all_z = data[:, 4]
+        high_x = high_energy_data[:, 2]
+        high_y = high_energy_data[:, 3]
+        high_z = high_energy_data[:, 4]
+        if energy_type == 'kinetic':
+            energy_col = 5
+            title_prefix = 'Kinetic'
+            cmap = self.energy_cmaps['kinetic']
+            threshold_desc = f'>{threshold_percentile}%'
+        elif energy_type == 'potential':
+            energy_col = 6  # c_pe_mobile
+            title_prefix = 'Potential'
+            cmap = self.energy_cmaps['potential']
+            # For potential energy, lower is more stable
+            threshold_desc = f'<{100-threshold_percentile}%'
+        else:
+            energy_col = 7
+            title_prefix = 'Total'
+            cmap = self.energy_cmaps['total']
+            threshold_desc = f'>{threshold_percentile}%'
+        high_energy_values = high_energy_data[:, energy_col]
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(all_x, all_y, all_z, c='lightgray', s=5, alpha=0.1)
+        # Plot high energy atoms with colors based on energy
+        scatter = ax.scatter(high_x, high_y, high_z, c=high_energy_values, cmap=cmap, s=30, alpha=1.0)
+        plt.colorbar(scatter, ax=ax, label=f'{title_prefix} Energy (eV)')
+        ax.set_xlabel('X (Å)')
+        ax.set_ylabel('Y (Å)')
+        ax.set_zlabel('Z (Å)')
+          
+        title = f'High {title_prefix} Energy Regions ({threshold_desc}) - Timestep {current_timestep}'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        ax.set_title(title)
+        
+        plt.tight_layout()
+        plt.savefig(f'high_{energy_type}_energy_regions_timestep_{current_timestep}.png', dpi=300)
