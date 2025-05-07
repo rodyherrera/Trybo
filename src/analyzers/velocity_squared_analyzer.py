@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords, get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis
 import numpy as np
 
 class VelocitySquaredAnalyzer:
@@ -13,7 +13,7 @@ class VelocitySquaredAnalyzer:
         if self._atom_groups is not None:
             return self._atom_groups
         data = self.parser.get_data()[0]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         # Dimensions
         z_min = np.min(z)
         z_max = np.max(z)
@@ -93,7 +93,8 @@ class VelocitySquaredAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        coords = get_data_from_coord_axis(axis, data)
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         velocity_squared = data[:, 5]
         temperature = self.velocity_to_temperature(velocity_squared)
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)

@@ -1,6 +1,5 @@
 from core.base_parser import BaseParser
 from analyzers.energy_analyzer import EnergyAnalyzer
-from utilities.analyzer import get_coords
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -118,7 +117,7 @@ class EnergyVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
         
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         
         if energy_type == 'kinetic':
             energy_col = 5
@@ -167,11 +166,11 @@ class EnergyVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             filtered_data = data[group_indices]
             high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type, group)
-            all_x, all_y, all_z = get_coords(filtered_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
         else:
             high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type)
-            all_x, all_y, all_z = get_coords(data)
-        high_x, high_y, high_z = get_coords(high_energy_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
+        high_x, high_y, high_z = self.parser.get_atoms_spatial_coordinates(high_energy_data)
         if energy_type == 'kinetic':
             energy_col = 5
             title_prefix = 'Kinetic'
@@ -216,7 +215,7 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         if energy_type == 'kinetic':
             energy_col = 5
             title_prefix = 'Kinetic'

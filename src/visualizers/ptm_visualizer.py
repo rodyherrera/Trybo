@@ -1,6 +1,6 @@
 from analyzers.ptm_analyzer import PTMAnalyzer
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords, get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -75,7 +75,7 @@ class PTMVisualizer:
         if group is not None and group != 'all':
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         # c_ptm[1]
         structure_types = data[:, 5].astype(int)
         # c_ptm[2]
@@ -155,7 +155,8 @@ class PTMVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
-        coords = get_data_from_coord_axis(axis, data)
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         axis_name = axis.upper()
         structure_types = data[:, 5].astype(int)
         min_coord = np.min(coords)
@@ -204,10 +205,10 @@ class PTMVisualizer:
             ax.clear()
             data = self.parser.get_data()[frame]
             current_timestep = timesteps[frame]
-            x, y, z = get_coords(data)
+            x, y, z = self.parser.get_atoms_spatial_coordinates()
             structure_types = data[:, 5].astype(int)
             for struct_type, name in self.analyzer.structure_names.items():
-                mask = struct_type == struct_type
+                mask = structure_types == struct_type
                 if np.any(mask):
                     color = self.analyzer.structure_colors[struct_type]
                     ax.scatter(x[mask], y[mask], z[mask], c=color, s=10, alpha=0.7, label=name)

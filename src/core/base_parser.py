@@ -11,6 +11,22 @@ class BaseParser(ABC):
         self._headers = []
         self._is_parsed = False
 
+        # The x, y, and z values ​​in the LAMMPS dump files.
+        # ITEM: ATOMS id type x y z [...]
+        self._atoms_spatial_coordinates_indices = []
+
+    def _parse_atoms_spatial_coordinates_indices(self):
+        try:
+            x_idx = self._headers.index('x')
+            y_idx = self._headers.index('y')
+            z_idx = self._headers.index('z')
+        except ValueError:
+            print('WARNING: The headers do not contain "x", "y", or "z". This is a critical error, and nothing may work as expected. Set the expected positions (2, 3, and 4, respectively).')
+            x_idx = 2
+            y_idx = 3
+            z_idx = 4
+        self._atoms_spatial_coordinates_indices.append(x_idx, y_idx, z_idx)
+
     def parse(self):
         timesteps = []
         data = []
@@ -49,9 +65,23 @@ class BaseParser(ABC):
         self._timesteps = timesteps
         self._data = data
         self._headers = headers
+
+        self._parse_atoms_spatial_coordinates_indices()
+
         self._is_parsed = True
 
         return timesteps, data, headers
+    
+    def get_atoms_spatial_coordinates(self, data = None):
+        if not self._is_parsed:
+            self.parse()
+        if data is None:
+            data = self._data
+        x_idx, y_idx, z_idx = self._atoms_spatial_coordinates_indices
+        x = data[:, x_idx]
+        y = data[:, y_idx]
+        z = data[:, z_idx]
+        return x, y, z
     
     def get_data(self) -> np.ndarray:
         if not self._is_parsed:

@@ -1,6 +1,5 @@
 from core.base_parser import BaseParser
 from analyzers.velocity_squared_analyzer import VelocitySquaredAnalyzer
-from utilities.analyzer import get_coords
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -71,7 +70,7 @@ class VelocitySquaredVisualizer:
         if group is not None and group != 'all':
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
         fig = plt.figure(figsize=(12, 10))
@@ -98,11 +97,11 @@ class VelocitySquaredVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             filtered_data = data[group_indices]
             hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile, group)
-            all_x, all_y, all_z = get_coords(filtered_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
         else:
             hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile)
-            all_x, all_y, all_z = get_coords(data)
-        hot_x, hot_y, hot_z = get_coords(hot_spots_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(data)
+        hot_x, hot_y, hot_z = self.parser.get_atoms_spatial_coordinates(hot_spots_data)
         hot_velocity_squared = hot_spots_data[:, 5]
         hot_temperature = self.analyzer.velocity_to_temperature(hot_velocity_squared)
         fig = plt.figure(figsize=(12, 10))
@@ -126,7 +125,7 @@ class VelocitySquaredVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))

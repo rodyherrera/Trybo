@@ -1,5 +1,4 @@
 import numpy as np
-from utilities.analyzer import get_coords
 
 class PTMAnalyzer:
     def __init__(self, parser):
@@ -35,7 +34,7 @@ class PTMAnalyzer:
         if self._atoms_groups is not None:
             return self._atoms_groups
         data = self.parser.get_data()[0]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
 
         # Dimensions
         z_min = np.min(z)

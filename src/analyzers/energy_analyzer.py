@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords, get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis
 import numpy as np
 
 class EnergyAnalyzer:
@@ -12,7 +12,7 @@ class EnergyAnalyzer:
             return self._atom_groups
 
         data = self.parser.get_data()[0]
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
 
         z_min = np.min(z)
         z_max = np.max(z)
@@ -115,7 +115,8 @@ class EnergyAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        coords = get_data_from_coord_axis(axis, data)
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
         # Create bins alongs the axis

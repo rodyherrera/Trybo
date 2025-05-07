@@ -1,5 +1,4 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords
 import numpy as np
 
 class HotspotAnalyzer:
@@ -14,7 +13,7 @@ class HotspotAnalyzer:
             timestep_idx = len(data) + timestep_idx
         
         current_data = data[timestep_idx]
-        x, y, z = get_coords(current_data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         ke_idx = headers.index('c_ke_hotspots')
         hotspot_idx = headers.index('v_is_hotspot')
 

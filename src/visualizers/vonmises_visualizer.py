@@ -1,6 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.vonmises_analyzer import VonMisesAnalyzer
-from utilities.analyzer import get_coords, get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -35,7 +35,7 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timestep_idx[timestep_idx]
 
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         stress = data[:, 5]
 
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))
@@ -131,7 +131,7 @@ class VonmisesVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
 
-        x, y, z = get_coords(data)
+        x, y, z = self.parser.get_atoms_spatial_coordinates()
         stress = data[:, 5]
 
         fig = plt.figure(figsize=(12, 10))
@@ -169,7 +169,8 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
-        coords = get_data_from_coord_axis(axis, data)
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         axis_name = axis.upper()
         stress = data[:, 5]
         
