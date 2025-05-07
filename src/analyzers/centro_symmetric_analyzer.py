@@ -120,3 +120,37 @@ class CentroSymmetricAnalyzer:
         defect_mask = centro_symmetric_values >= threshold
         defect_data = data[defect_mask]
         return defect_data, defect_mask
+
+    def calculate_defect_profile(self, timestep_idx=-1, axis='z', n_bins=20):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        centro_symmetric_values = data[:, 5]
+        if axis == 'x':
+            coords = x
+        elif axis == 'y':
+            coords = y
+        else:
+            coords = z
+        bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
+        bin_centers = 0.5 * (bins[1:] + bins[:-1])
+        defect_percent = []
+        average_centro_symmetric = []
+        for i in range(n_bins):
+            bin_min = bins[i]
+            bin_max = bins[i + 1]
+            # Atoms in this bin
+            bin_mask = (coords >= bin_min) & (coords < bin_max)
+            bin_centro_symmetric_values = centro_symmetric_values[bin_mask]
+            if len(bin_centro_symmetric_values) > 0:
+                defect_count = np.sum(bin_centro_symmetric_values >= self.defect_threshold)
+                defect_percent.append(defect_count * 100 / len(bin_centro_symmetric_values))
+                average_centro_symmetric.append(np.mean(bin_centro_symmetric_values))
+            else:
+                defect_percent.append(0)
+                average_centro_symmetric.append(0)
+        return bin_centers, defect_percent, average_centro_symmetric
