@@ -37,3 +37,17 @@ class VelocitySquaredAnalyzer:
     def velocity_to_temperature(self, velocity_squared):
         # T = m * v² / (3 * k_B)
         return velocity_squared * self.metal_units_conversion
+    
+    def get_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        velocity_squared = data[:, 5]
+        hot_threshold = np.percentile(velocity_squared, threshold_percentile)
+        hot_spots_mask = velocity_squared >= hot_threshold
+        hot_spots_data = data[hot_spots_mask]
+        return hot_spots_data, hot_spots_mask
