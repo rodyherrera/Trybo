@@ -181,4 +181,18 @@ class VelocitySquaredVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig('temperature_by_groups.png', dpi=300)
-        
+    
+    def plot_temperature_gradient(self, timestep_idx=-1, axis='z'):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        current_timestep = timesteps[timestep_idx]
+        bin_centers, bin_temps = self.analyzer.calculate_temperature_gradient(timestep_idx, axis)
+        plt.figure(figsize=(12, 8))
+        plt.plot(bin_centers, bin_temps, 'r-o')
+        plt.xlabel(f'Position on axis {axis.upper()} (Å)')
+        plt.ylabel('Temperature (K)')
+        plt.title(f'Temperature gradient along axis {axis.upper()} (Timestep {current_timestep})')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.tight_layout()
+        plt.savefig(f'temperature_gradient_{axis}_timestep_{current_timestep}.png', dpi=300)
