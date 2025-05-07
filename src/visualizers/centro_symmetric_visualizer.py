@@ -232,3 +232,56 @@ class CentroSymmetricVisualizer:
         plt.suptitle(f'Centro-Symmetric Parameter Heat Maps (Timestep {current_timestep})', y=1.05)
         plt.tight_layout()
         plt.savefig(f'cs_heatmaps_timestep_{current_timestep}.png', dpi=300)
+
+    def plot_defect_by_groups(self, timestep_idx=-1):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        current_timestep = timesteps[timestep_idx]
+        
+        # Get statistics for each group
+        nano_stats = self.analyzer.get_defect_statistics(timestep_idx, 'nanoparticle')
+        upper_stats = self.analyzer.get_defect_statistics(timestep_idx, 'upper_plane')
+        lower_stats = self.analyzer.get_defect_statistics(timestep_idx, 'lower_plane')
+        
+        # Prepare data for bar chart
+        groups = ['Nanoparticle', 'Upper Plane', 'Lower Plane']
+        perfect = [nano_stats['perfect_percent'], upper_stats['perfect_percent'], lower_stats['perfect_percent']]
+        defect = [nano_stats['defect_percent'], upper_stats['defect_percent'], lower_stats['defect_percent']]
+        stacking_fault = [nano_stats['stacking_fault_percent'], upper_stats['stacking_fault_percent'], lower_stats['stacking_fault_percent']]
+        
+        x = np.arange(len(groups))
+        width = 0.25
+        
+        fig, ax = plt.subplots(figsize=(12, 8))
+        
+        # Create grouped bar chart
+        bar1 = ax.bar(x - width, perfect, width, label='Perfect Crystal', color=self.structure_colors['perfect'])
+        bar2 = ax.bar(x, stacking_fault, width, label='Stacking Faults', color=self.structure_colors['stacking_fault'])
+        bar3 = ax.bar(x + width, defect, width, label='Defects', color=self.structure_colors['defect'])
+        
+        ax.set_xlabel('Group')
+        ax.set_ylabel('Percentage of Atoms (%)')
+        ax.set_title(f'Comparison of Crystal Structure Between Groups (Timestep {current_timestep})')
+        ax.set_xticks(x)
+        ax.set_xticklabels(groups)
+        ax.legend()
+        
+        # Add value labels on bars
+        def add_labels(bars):
+            for bar in bars:
+                height = bar.get_height()
+                ax.annotate(f'{height:.2f}%',
+                          xy=(bar.get_x() + bar.get_width() / 2, height),
+                          xytext=(0, 3),
+                          textcoords='offset points',
+                          ha='center', va='bottom')
+        
+        add_labels(bar1)
+        add_labels(bar2)
+        add_labels(bar3)
+        
+        plt.tight_layout()
+        plt.savefig(f'defect_by_groups_timestep_{current_timestep}.png', dpi=300)
