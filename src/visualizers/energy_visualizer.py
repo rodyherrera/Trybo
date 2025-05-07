@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from analyzers.energy_visualizer import EnergyAnalyzer
+from analyzers.energy_analyzer import EnergyAnalyzer
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -103,8 +103,6 @@ class EnergyVisualizer:
         plt.tight_layout()
         
         plt.savefig(f'{energy_type}_energy_evolution.png', dpi=300)
-        
-        plt.show()
     
     def plot_energy_3d(self, timestep_idx=-1, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
@@ -337,8 +335,6 @@ class EnergyVisualizer:
         plt.tight_layout()
         
         plt.savefig(f'{energy_type}_energy_profile_{axis}_timestep_{current_timestep}.png', dpi=300)
-        
-        plt.show()
 
     def plot_energy_comparison(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
@@ -398,5 +394,3 @@ class EnergyVisualizer:
         plt.tight_layout()
         
         plt.savefig(f'energy_comparison_timestep_{current_timestep}.png', dpi=300)
-        
-        plt.show()

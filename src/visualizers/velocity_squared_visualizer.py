@@ -42,7 +42,6 @@ class VelocitySquaredVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig(f'temperature_distribution_timestep_{current_timestep}.png', dpi=300)
-        plt.show()
 
     def plot_temperature_evolution(self, group=None):
         timesteps, average_temperature, max_temperature, min_temperature= self.analyzer.get_temperature_evolution(group)
