@@ -42,3 +42,10 @@ class CentroSymmetricAnalyzer:
             'all': np.arange(len(data))
         }
         return self._atom_groups
+
+    def classify_atoms(self, centro_symmetric_values):
+        classifications = {}
+        for struct_type, (min_value, max_value) in self.structure_ranges.items():
+            mask = (centro_symmetric_values >= min_value) & (centro_symmetric_values < max_value)
+            classifications[struct_type] = mask
+        return classifications
