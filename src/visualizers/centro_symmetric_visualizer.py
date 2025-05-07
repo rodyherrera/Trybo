@@ -164,7 +164,7 @@ class CentroSymmetricVisualizer:
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
         else:
             defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold)
-            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(data)
 
         defect_x, defect_y, defect_z = self.parser.get_atoms_spatial_coordinates(defect_data)
         defect_centro_symmetric = defect_data[:, 5]
