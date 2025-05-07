@@ -107,3 +107,42 @@ class CentroSymmetricVisualizer:
         plt.tight_layout()
         
         plt.savefig('cs_values_evolution.png', dpi=300)
+
+    def plot_defect_3d(self, timestep_idx=-1, group=None):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        data = self.parser.get_data()[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            data = data[group_indices]
+        
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        cs_values = data[:, 5]
+        
+        classifications = self.analyzer.classify_atoms(cs_values)
+        
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        
+        for struct_type, mask in classifications.items():
+            if np.any(mask):
+                ax.scatter(x[mask], y[mask], z[mask], c=self.structure_colors.get(struct_type, 'gray'), s=10, alpha=0.7, label=struct_type)
+        
+        ax.set_xlabel('X (Å)')
+        ax.set_ylabel('Y (Å)')
+        ax.set_zlabel('Z (Å)')
+
+        title = '3D Crystal Structure Visualization'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        ax.set_title(f'{title} (Timestep {current_timestep})')
+        
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig(f'defect_3d_timestep_{current_timestep}.png', dpi=300)
