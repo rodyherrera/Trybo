@@ -127,3 +127,38 @@ class VelocitySquaredVisualizer:
         ax.set_title(title)
         plt.tight_layout()
         plt.savefig(f'hot_spots_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_temperature_heatmaps(self, timestep_idx=-1):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        velocity_squared = data[:, 5]
+        temperature = self.analyzer.velocity_to_temperature(velocity_squared)
+        fig, axs = plt.subplots(1, 3, figsize=(18, 6))
+        bins = 50
+        hxy = axs[0].hexbin(x, y, C=temperature, gridsize=bins, reduce_C_function=np.mean, cmap=self.temp_cmap)
+        axs[0].set_title('Temperature Map - XY Plane (Top View)')
+        axs[0].set_xlabel('X (Å)')
+        axs[0].set_ylabel('Y (Å)')
+        fig.colorbar(hxy, ax=axs[0], label='Average Temperature (K)')
+
+        hxz = axs[1].hexbin(x, z, C=temperature, gridsize=bins, reduce_C_function=np.mean, cmap=self.temp_cmap)
+        axs[1].set_title('Temperature Map - XZ Plane (Side View)')
+        axs[1].set_xlabel('X (Å)')
+        axs[1].set_ylabel('Z (Å)')
+        fig.colorbar(hxz, ax=axs[1], label='Average Temperature (K)')
+
+        hyz = axs[2].hexbin(y, z, C=temperature, gridsize=bins, reduce_C_function=np.mean, cmap=self.temp_cmap)
+        axs[2].set_title('Temperature Map - YZ Plane (Front View)')
+        axs[2].set_xlabel('Y (Å)')
+        axs[2].set_ylabel('Z (Å)')
+        fig.colorbar(hyz, ax=axs[2], label='Average Temperature (K)')
+
+        plt.suptitle(f'Temperature Heat Steps - Timestep {current_timestep}', y=1.05)
+        plt.savefig(f'temperature_heatmaps_timestep_{current_timestep}.png', dpi=300)
+        
