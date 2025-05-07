@@ -90,3 +90,25 @@ class VelocitySquaredAnalyzer:
         }
         
         return stats
+
+    def calculate_temperature_gradient(self, timestep_idx=-1, axis='z', n_bins=20):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        velocity_squared = data[:, 5]
+        if axis == 'x':
+            coords = x
+        elif axis == 'y':
+            coords = y
+        else:
+            coords = z
+        temperature = self.velocity_to_temperature(velocity_squared)
+        bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
+        bin_centers = 0.5 * (bins[1:] + bins[:-1])
+        digitized = np.digitize(coords, bins)
+        bin_temps = [temperature[digitized == i].mean() for i in range(1, len(bins))]
+        return bin_centers, bin_temps
