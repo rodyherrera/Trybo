@@ -41,15 +41,7 @@ class EnergyAnalyzer:
         if group is not None and group != 'all':
             group_indices = self.get_atom_group_indices()[group]
             data = data[group_indices]
-        if energy_type == 'kinetic':
-            # c_ke_mobile
-            energy_col = 5
-        elif energy_type == 'potential':
-            # c_pe_mobile
-            energy_col = 6
-        else:
-            # v_total_energy
-            energy_col = 7
+        energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
                 
         stats = {
@@ -66,16 +58,7 @@ class EnergyAnalyzer:
     def get_energy_evolution(self, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
         all_data = self.parser.get_data()
-        # TODO: REFACTOR THIS DUPLICATED CODE
-        if energy_type == 'kinetic':
-            # c_ke_mobile
-            energy_col = 5
-        elif energy_type == 'potential':
-            # c_pe_mobile
-            energy_col = 6
-        else:
-            # v_total_energy
-            energy_col = 7
+        energy_col = self.get_energy_column_by_type(energy_type)
         average_energy = []
         max_energy = []
         min_energy = []
@@ -101,15 +84,7 @@ class EnergyAnalyzer:
         if group is not None and group != 'all':
             group_indices = self.get_atom_group_indices()[group]
             data = data[group_indices]
-        if energy_type == 'kinetic':
-            # c_ke_mobile
-            energy_col = 5
-        elif energy_type == 'potential':
-            # c_pe_mobile
-            energy_col = 6
-        else:
-            # v_total_energy
-            energy_col = 7
+        energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
         # Calculate threshold for high energy
         # For potential energy, we're looking for the most negative values (most stable)
@@ -122,6 +97,19 @@ class EnergyAnalyzer:
         high_energy_data = data[high_energy_mask]
         return high_energy_data, high_energy_mask
     
+    def get_energy_column_by_type(energy_type):
+        types = {
+            # c_ke_mobile
+            'kinetic': 5,
+            # c_pe_mobile
+            'potential': 6,
+            # v_total_energy
+            # return v_total_energy column
+            # in case there is no match within the type keys
+            # 'total': 7
+        }
+        return types.get(energy_type, 7)
+
     def calculate_energy_profile(self, timestep_idx=-1, axis='z', n_bins=20, energy_type='total'):
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
@@ -134,15 +122,7 @@ class EnergyAnalyzer:
             coords = y
         else:
             coords = z
-        if energy_type == 'kinetic':
-            # c_ke_mobile
-            energy_col = 5
-        elif energy_type == 'potential':
-            # c_pe_mobile
-            energy_col = 6
-        else:
-            # v_total_energy
-            energy_col = 7
+        energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
         # Create bins alongs the axis
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
