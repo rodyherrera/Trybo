@@ -1,4 +1,5 @@
 import numpy as np
+from core.base_parser import BaseParser
 
 class PTMAnalyzer:
     def __init__(self, parser):
@@ -34,25 +35,7 @@ class PTMAnalyzer:
         if self._atoms_groups is not None:
             return self._atoms_groups
         data = self.parser.get_data()[0]
-        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
-
-        # Dimensions
-        z_min = np.min(z)
-        z_max = np.max(z)
-        z_threshold_lower = z_min + 2.5
-        z_threshold_upper = z_max - 2.5
-
-        # Indexes for each group
-        lower_plane_mask = z <= z_threshold_lower
-        upper_plane_mask = z >= z_threshold_upper
-        nanoparticle_mask = ~(lower_plane_mask | upper_plane_mask)
-
-        self._atoms_groups = {
-            'lower_plane': np.where(lower_plane_mask)[0],
-            'upper_plane': np.where(upper_plane_mask)[0],
-            'nanoparticle': np.where(nanoparticle_mask)[0],
-            'all': np.arange(len(data))
-        }
+        self._atoms_groups = self.parser.get_atom_group_indices(data)
 
         return self._atoms_groups
     

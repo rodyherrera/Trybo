@@ -13,25 +13,8 @@ class VonMisesAnalyzer:
     def get_atom_group_indices(self):
         if self.group_indices is not None:
             return self.group_indices
-
         data = self.parser.get_data()[-1]
-        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
-        z_min = np.min(z)
-        z_max = np.max(z)
-        # z_middle = (z_max + z_min) / 2
-        z_threshold_lower = z_min + 2.5
-        z_threshold_upper = z_max - 2.5
-        
-        lower_plane_mask = z <= z_threshold_lower
-        upper_plane_mask = z >= z_threshold_upper
-        nanoparticle_mask = ~(lower_plane_mask | upper_plane_mask)
-
-        self.group_indices = {
-            'lower_plane': np.where(lower_plane_mask)[0],
-            'upper_plane': np.where(upper_plane_mask)[0],
-            'nanoparticle': np.where(nanoparticle_mask)[0],
-            'all': np.arange(len(data))
-        }
+        self.group_indices = self.get_atom_group_indices(data)
 
         return self.group_indices
 

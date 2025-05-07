@@ -11,7 +11,7 @@ class VonmisesVisualizer:
         self.analyzer = VonMisesAnalyzer(parser)
 
     def plot_stress_evolution(self):
-        timesteps = self.parser.get_data()
+        timesteps = self.parser.get_timesteps()
         average_stress, max_stress, min_stress = self.analyzer.get_stress_evolution()
         
         plt.figure(figsize=(12, 8))
