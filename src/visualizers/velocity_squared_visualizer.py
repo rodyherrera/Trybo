@@ -89,3 +89,41 @@ class VelocitySquaredVisualizer:
         ax.set_title(title)
         plt.tight_layout()
         plt.savefig(f'temperature_3d_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        current_timestep = timesteps[timestep_idx]
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            filtered_data = data[group_indices]
+            hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile, group)
+            all_x = filtered_data[:, 2]
+            all_y = filtered_data[:, 3]
+            all_z = filtered_data[:, 4]
+        else:
+            hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile)
+            all_x = data[:, 2]
+            all_y = data[:, 3]
+            all_z = data[:, 4]
+        hot_x = hot_spots_data[:, 2]
+        hot_y = hot_spots_data[:, 3]
+        hot_z = hot_spots_data[:, 4]
+        hot_velocity_squared = hot_spots_data[:, 5]
+        hot_temperature = self.analyzer.velocity_to_temperature(hot_velocity_squared)
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(all_x, all_y, all_z, c='lightgray', s=5, alpha=0.1)
+        scatter = ax.scatter(hot_x, hot_y, hot_z, c=hot_temperature, cmap=self.temp_cmap, s=30, alpha=1.0)
+        plt.colorbar(scatter, ax=ax, label='Temperature (K)')
+        ax.set_xlabel('X (Å)')
+        ax.set_ylabel('Y (Å)')
+        ax.set_zlabel('Z (Å)')
+        title = f'Puntos Calientes (>{threshold_percentile}%) - Timestep {current_timestep}'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        ax.set_title(title)
+        plt.tight_layout()
+        plt.savefig(f'hot_spots_timestep_{current_timestep}.png', dpi=300)
