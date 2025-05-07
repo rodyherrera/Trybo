@@ -61,3 +61,31 @@ class VelocitySquaredVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig('temperature_evolution.png', dpi=300)
+    
+    def plot_temperature_3d(self, timestep_idx=-1, group=None):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            data = data[group_indices]
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        velocity_squared = data[:, 5]
+        temperature = self.analyzer.velocity_to_temperature(velocity_squared)
+        fig = plt.figure(figsize=(12, 10))
+        ax = fig.add_subplot(111, projection='3d')
+        scatter = ax.scatter(x, y, z, c=temperature, cmap=self.temp_cmap, s=10, alpha=0.7)
+        plt.colorbar(scatter, ax=ax, label='Temperature (K)')
+        ax.set_xlabel('X (Å)')
+        ax.set_ylabel('Y (Å)')
+        ax.set_zlabel('Z (Å)')
+        title = f'3D Temperature Distribution (Timestep {current_timestep})'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        ax.set_title(title)
+        plt.tight_layout()
+        plt.savefig(f'temperature_3d_timestep_{current_timestep}.png', dpi=300)
