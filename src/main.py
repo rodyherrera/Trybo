@@ -66,6 +66,7 @@ def run_analysis(dump_folder, analysis_type=None, timestep=-1):
                     func(dump_folder, timestep)
                     logger.info(f"Completed {name} analysis")
                 except Exception as e:
+                    print(e)
                     logger.error(f"Error in {name} analysis: {e}")
         elif analysis_type in analysis_functions:
             # Run specific analysis

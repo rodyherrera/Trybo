@@ -59,7 +59,7 @@ class DebrisAnalyzer:
             else:
                 size_distribution[size] = 1
         sizes = sorted(size_distribution.keys())
-        counts = [size_distribution(size) for size in sizes]
+        counts = [size_distribution[size] for size in sizes]
         return sizes, counts
     
     def get_cluster_spatial_data(self, timestep_idx=-1, min_size=2):
