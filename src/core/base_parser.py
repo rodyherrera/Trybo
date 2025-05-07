@@ -10,6 +10,10 @@ class BaseParser(ABC):
         self._data = []
         self._headers = []
         self._is_parsed = False
+        # Simulation box dimensions
+        self._box_bounds = None
+        # Metadata from the dump file
+        self._metadata = {}
 
         # The x, y, and z values ​​in the LAMMPS dump files.
         # ITEM: ATOMS id type x y z [...]
@@ -112,9 +116,13 @@ class BaseParser(ABC):
         z = data[:, z_idx]
         return x, y, z
     
-    def get_data(self) -> np.ndarray:
+    def get_data(self, timestep_idx = None) -> np.ndarray:
         if not self._is_parsed:
             self.parse()
+        if timestep_idx is not None:
+            if timestep_idx < 0:
+                timestep_idx = len(self._data) + timestep_idx
+            return self._data[timestep_idx]
         return self._data
     
     def get_headers(self) -> List[str]:
@@ -126,3 +134,38 @@ class BaseParser(ABC):
         if not self._is_parsed:
             self.parse()
         return self._timesteps
+    
+    def get_column_data(self, column_name: str, timestep_idx=-1) -> np.ndarray:
+        if not self._is_parsed:
+            self.parse()
+        try:
+            column_idx = self._headers.index(column_name)
+        except ValueError:
+            raise ValueError(f"Column '{column_name}' not found in headers: {self._headers}")
+        if timestep_idx < 0:
+            timestep_idx = len(self._data) + timestep_idx
+        return self._data[timestep_idx][:, column_idx]
+
+    def get_metadata(self) -> Dict[str, Any]:
+        if not self._is_parsed:
+            self.parse()
+        return self._metadata
+    
+    def get_atom_types(self, timestep_idx=-1) -> np.ndarray:
+        if not self._is_parsed:
+            self.parse()
+        try:
+            type_idx = self._headers.index('type')
+        except ValueError:
+            raise ValueError('Atom type information not found in headers')
+        if timestep_idx < 0:
+            timestep_idx = len(self._data) + timestep_idx
+        return self._data[timestep_idx][:, type_idx].astype(int)
+
+    def get_atom_count(self, timestep_idx=-1) -> int:
+        if not self._is_parsed:
+            self.parse()
+        if timestep_idx < 0:
+            timestep_idx = len(self._data) + timestep_idx
+        return len(self._data[timestep_idx])
+    

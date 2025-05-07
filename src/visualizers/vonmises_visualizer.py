@@ -33,7 +33,7 @@ class VonmisesVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
 
         data = self.parser.get_data()[timestep_idx]
-        current_timestep = timestep_idx[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
 
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         stress = data[:, 5]

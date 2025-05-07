@@ -14,7 +14,7 @@ class VonMisesAnalyzer:
         if self.group_indices is not None:
             return self.group_indices
         data = self.parser.get_data()[-1]
-        self.group_indices = self.get_atom_group_indices(data)
+        self.group_indices = self.parser.get_atom_group_indices(data)
 
         return self.group_indices
 
