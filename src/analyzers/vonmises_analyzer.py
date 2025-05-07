@@ -14,7 +14,7 @@ class VonMisesAnalyzer:
         if self.group_indices is not None:
             return self.group_indices
 
-        data = self.parser.get_data()
+        data = self.parser.get_data()[-1]
         # x = data[:, 2]
         # y = data[:, 3]
         z = data[:, 4]
