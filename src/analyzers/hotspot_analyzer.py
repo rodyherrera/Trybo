@@ -14,11 +14,8 @@ class HotspotAnalyzer:
         
         current_data = data[timestep_idx]
         x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-        ke_idx = headers.index('c_ke_hotspots')
-        hotspot_idx = headers.index('v_is_hotspot')
-
-        ke_values = current_data[:, ke_idx]
-        is_hotspot = current_data[:, hotspot_idx]
+        ke_values = self.parser.get_column_data('c_ke_hotspots')
+        is_hotspot = self.parser.get_column_data('v_is_hotspots')
 
         return x, y, z, ke_values, is_hotspot
     

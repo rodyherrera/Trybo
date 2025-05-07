@@ -25,22 +25,17 @@ class CommonNeighborAnalysisAnalyzer:
     
     def get_cna_data(self):
         data = self.parser.get_data()
-        headers = self.parser.get_headers()
-        cna_idx = headers.index('c_cna')
         cna_data = []
         for timestep_data in data:
-            cna_values = timestep_data[:, cna_idx]
+            cna_values = self.parser.get_column_data('c_cna', data=timestep_data)
             cna_data.append(cna_values)
         return cna_data
     
     def get_structure_counts(self, timestep_idx=-1):
         data = self.parser.get_data()
-        headers = self.parser.get_headers()
         if timestep_idx < 0:
             timestep_idx = len(data) + timestep_idx
-        current_data = data[timestep_idx]
-        cna_idx = headers.index('c_cna')
-        cna_values = current_data[:, cna_idx]
+        cna_values = self.parser.get_column_data('c_cna', timestep_idx)
         # Ocurrences of each structure type
         unique, counts = np.unique(cna_values, return_counts=True)
         structure_counts = dict(zip(unique, counts))
@@ -71,16 +66,13 @@ class CommonNeighborAnalysisAnalyzer:
     
     def get_spatial_distribution(self, timestep_idx=-1):
         data = self.parser.get_data()
-        headers = self.parser.get_headers()
         
         if timestep_idx < 0:
             timestep_idx = len(data) + timestep_idx
 
         current_data = data[timestep_idx]
         x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-        cna_idx = headers.index('c_cna')
-
-        cna = current_data[:, cna_idx]
+        cna = self.parser.get_column_data('c_cna', timestep_idx)
 
         return x, y, z, cna
     

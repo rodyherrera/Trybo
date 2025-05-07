@@ -13,8 +13,7 @@ class CoordinationAnalyzer:
             timestep_idx = len(data) + timestep_idx
         
         current_data = data[timestep_idx]
-        coord_idx = headers.index('c_coord')
-        coord_values = current_data[:, coord_idx]
+        coord_values = self.parser.get_column_data('c_coord', timestep_idx)
 
         return coord_values
     
@@ -66,8 +65,7 @@ class CoordinationAnalyzer:
         
         current_data = data[timestep_idx]
         x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-        coord_idx = headers.index('c_coord')
-        coord = current_data[:, coord_idx]
+        coord = self.parser.get_column_data('c_coord', timestep_idx)
         return x, y, z, coord
     
     def classify_atoms(self, timestep_idx=-1):

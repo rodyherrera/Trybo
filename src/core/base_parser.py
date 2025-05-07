@@ -135,13 +135,15 @@ class BaseParser(ABC):
             self.parse()
         return self._timesteps
     
-    def get_column_data(self, column_name: str, timestep_idx=-1) -> np.ndarray:
+    def get_column_data(self, column_name: str, timestep_idx=-1, data=None) -> np.ndarray:
         if not self._is_parsed:
             self.parse()
         try:
             column_idx = self._headers.index(column_name)
         except ValueError:
             raise ValueError(f"Column '{column_name}' not found in headers: {self._headers}")
+        if data is not None:
+            return data[:, column_idx]
         if timestep_idx < 0:
             timestep_idx = len(self._data) + timestep_idx
         return self._data[timestep_idx][:, column_idx]

@@ -5,4 +5,4 @@ def get_data_from_coord_axis(axis, coords):
         'y': y,
         'z': z
     }
-    return values.get(axis, z), 
+    return values.get(axis, z)
