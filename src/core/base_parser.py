@@ -1,4 +1,4 @@
-from abc import ABC, abstractmethod
+from abc import ABC
 from typing import List, Dict, Any
 import numpy as np
 
@@ -72,6 +72,40 @@ class BaseParser(ABC):
 
         return timesteps, data, headers
     
+    def get_atom_group_indices(self, data=None, timestep_idx=-1):
+        '''
+        Identifies atom indices for different groups based on their position along the Z axis
+        
+        Args:
+            data: Optional data array to use instead of the parser's data
+            timestep_idx: Timestep index to use if data is not provided
+
+        Returns:
+            dict: Dictionary with indices for each group (lower_plane, upper_plane, nanoparticle, all)
+        '''
+        if data is None:
+            data = self.get_data()[timestep_idx]
+        # Get Z coordinates
+        x, y, z = self.get_atoms_spatial_coordinates(timestep_idx=timestep_idx)
+        # Calculate Z thresholds
+        z_min = np.min(z)
+        z_max = np.max(z)
+        # Lower plane up to 2.5 Å
+        z_threshold_lower = z_min + 2.5
+        # Upper plane from z_max - 2.5 Å
+        z_threshold_upper = z_max - 2.5
+        # Identify groups based on Z position
+        lower_plane_mask = z <= z_threshold_lower
+        upper_plane_mask = z >= z_threshold_upper
+        nanoparticle_mask = ~(lower_plane_mask | upper_plane_mask)
+        # Return dictionary with indices for each group
+        return {
+            'lower_plane': np.where(lower_plane_mask)[0],
+            'upper_plane': np.where(upper_plane_mask)[0],
+            'nanoparticle': np.where(nanoparticle_mask)[0],
+            'all': np.arange(len(z))
+        }
+        
     def get_atoms_spatial_coordinates(self, data):
         if not self._is_parsed:
             self.parse()

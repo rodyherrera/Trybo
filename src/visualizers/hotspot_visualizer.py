@@ -169,7 +169,7 @@ class HotspotVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         
         current_timestep = timesteps[timestep_idx]
-        x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_distribution(timestep_idx)
+        x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_energy_distribution(timestep_idx)
         hotspot_mask = is_hotspot > 0
        
         if not np.any(hotspot_mask):
