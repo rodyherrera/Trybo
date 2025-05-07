@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import numpy as np
 
 class CentroSymmetricAnalyzer:
@@ -25,9 +26,7 @@ class CentroSymmetricAnalyzer:
         if self._atom_groups is not None:
             return self._atom_groups
         data = self.parser.get_data()[0]
-        # x = data[:, 2]
-        # y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         z_min = np.min(z)
         z_max = np.max(z)
         z_threshold_lower = z_min + 2.5
@@ -126,9 +125,7 @@ class CentroSymmetricAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         centro_symmetric_values = data[:, 5]
         if axis == 'x':
             coords = x

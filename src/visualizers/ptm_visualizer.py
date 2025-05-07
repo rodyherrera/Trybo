@@ -1,5 +1,6 @@
 from analyzers.ptm_analyzer import PTMAnalyzer
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -74,9 +75,7 @@ class PTMVisualizer:
         if group is not None and group != 'all':
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         # c_ptm[1]
         structure_types = data[:, 5].astype(int)
         # c_ptm[2]
@@ -156,9 +155,7 @@ class PTMVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         if axis == 'x':
             coords = x
             axis_name = 'X'
@@ -215,9 +212,7 @@ class PTMVisualizer:
             ax.clear()
             data = self.parser.get_data()[frame]
             current_timestep = timesteps[frame]
-            x = data[:, 2]
-            y = data[:, 3]
-            z = data[:, 4]
+            x, y, z = get_coords(data)
             structure_types = data[:, 5].astype(int)
             for struct_type, name in self.analyzer.structure_names.items():
                 mask = struct_type == struct_type

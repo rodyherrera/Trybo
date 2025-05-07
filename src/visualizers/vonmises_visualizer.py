@@ -1,5 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.vonmises_analyzer import VonMisesAnalyzer
+from utilities.analyzer import get_coords
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -34,9 +35,7 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timestep_idx[timestep_idx]
 
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         stress = data[:, 5]
 
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))
@@ -131,10 +130,8 @@ class VonmisesVisualizer:
         if group is not None and group != 'all':
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
-        
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+
+        x, y, z = get_coords(data)
         stress = data[:, 5]
 
         fig = plt.figure(figsize=(12, 10))
@@ -172,9 +169,7 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         stress = data[:, 5]
 
         if axis == 'x':

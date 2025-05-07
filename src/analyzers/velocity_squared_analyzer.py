@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import numpy as np
 
 class VelocitySquaredAnalyzer:
@@ -12,11 +13,7 @@ class VelocitySquaredAnalyzer:
         if self._atom_groups is not None:
             return self._atom_groups
         data = self.parser.get_data()[0]
-        # Groups
-        # TODO: Duplicated code (ptm analyzer)
-        # x = data[:, 2]
-        # y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         # Dimensions
         z_min = np.min(z)
         z_max = np.max(z)
@@ -96,9 +93,7 @@ class VelocitySquaredAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         velocity_squared = data[:, 5]
         if axis == 'x':
             coords = x

@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import numpy as np
 
 class VonMisesAnalyzer:
@@ -15,10 +16,7 @@ class VonMisesAnalyzer:
             return self.group_indices
 
         data = self.parser.get_data()[-1]
-        # x = data[:, 2]
-        # y = data[:, 3]
-        z = data[:, 4]
-
+        x, y, z = get_coords(data)
         z_min = np.min(z)
         z_max = np.max(z)
         # z_middle = (z_max + z_min) / 2

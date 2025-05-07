@@ -1,5 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.centro_symmetric_analyzer import CentroSymmetricAnalyzer
+from utilities.analyzer import get_coords
 import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
@@ -120,9 +121,7 @@ class CentroSymmetricVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
         
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         cs_values = data[:, 5]
         
         classifications = self.analyzer.classify_atoms(cs_values)
@@ -163,18 +162,12 @@ class CentroSymmetricVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             filtered_data = data[group_indices]
             defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold, group)
-            all_x = filtered_data[:, 2]
-            all_y = filtered_data[:, 3]
-            all_z = filtered_data[:, 4]
+            all_x, all_y, all_z = get_coords(filtered_data)
         else:
             defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold)
-            all_x = data[:, 2]
-            all_y = data[:, 3]
-            all_z = data[:, 4]
+            all_x, all_y, all_z = get_coords(data)
 
-        defect_x = defect_data[:, 2]
-        defect_y = defect_data[:, 3]
-        defect_z = defect_data[:, 4]
+        defect_x, defect_y, defect_z = get_coords(defect_data)
         defect_centro_symmetric = defect_data[:, 5]
                 
         fig = plt.figure(figsize=(12, 10))
@@ -203,9 +196,7 @@ class CentroSymmetricVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         cs_values = data[:, 5]
         
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))

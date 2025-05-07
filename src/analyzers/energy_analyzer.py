@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import numpy as np
 
 class EnergyAnalyzer:
@@ -11,9 +12,7 @@ class EnergyAnalyzer:
             return self._atom_groups
 
         data = self.parser.get_data()[0]
-        # x = data[:, 2]
-        # y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
 
         z_min = np.min(z)
         z_max = np.max(z)
@@ -128,9 +127,7 @@ class EnergyAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        x = data[:, 2]
-        y = data[:, 3]
-        z = data[:, 4]
+        x, y, z = get_coords(data)
         if axis == 'x':
             coords = x
         elif axis == 'y':
