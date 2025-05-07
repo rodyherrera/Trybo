@@ -1,6 +1,6 @@
 from analyzers.ptm_analyzer import PTMAnalyzer
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords
+from utilities.analyzer import get_coords, get_data_from_coord_axis
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -155,16 +155,8 @@ class PTMVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
-        x, y, z = get_coords(data)
-        if axis == 'x':
-            coords = x
-            axis_name = 'X'
-        elif axis == 'y':
-            coords = y
-            axis_name = 'Y'
-        else:
-            coords = z
-            axis_name = 'Z'
+        coords = get_data_from_coord_axis(axis, data)
+        axis_name = axis.upper()
         structure_types = data[:, 5].astype(int)
         min_coord = np.min(coords)
         max_coord = np.max(coords)

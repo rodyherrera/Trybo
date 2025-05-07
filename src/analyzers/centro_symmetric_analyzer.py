@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords
+from utilities.analyzer import get_coords, get_data_from_coord_axis
 import numpy as np
 
 class CentroSymmetricAnalyzer:
@@ -125,14 +125,8 @@ class CentroSymmetricAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        x, y, z = get_coords(data)
+        coords = get_data_from_coord_axis(axis, data)
         centro_symmetric_values = data[:, 5]
-        if axis == 'x':
-            coords = x
-        elif axis == 'y':
-            coords = y
-        else:
-            coords = z
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
         defect_percent = []

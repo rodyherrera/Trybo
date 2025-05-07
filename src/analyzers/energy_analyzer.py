@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_coords
+from utilities.analyzer import get_coords, get_data_from_coord_axis
 import numpy as np
 
 class EnergyAnalyzer:
@@ -115,13 +115,7 @@ class EnergyAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        x, y, z = get_coords(data)
-        if axis == 'x':
-            coords = x
-        elif axis == 'y':
-            coords = y
-        else:
-            coords = z
+        coords = get_data_from_coord_axis(axis, data)
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
         # Create bins alongs the axis
