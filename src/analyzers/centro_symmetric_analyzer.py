@@ -79,3 +79,29 @@ class CentroSymmetricAnalyzer:
             stats[f'{struct_type}_percent'] = count * 100 / total_atoms
         
         return stats
+    
+    def get_defect_evolution(self, group=None):
+        timesteps = self.parser.get_timesteps()
+        all_data = self.parser.get_data()
+        evolution = {
+            'mean': [],
+            'max': [],
+            'defect_percent': [],
+            'perfect_percent': [],
+            'stacking_fault_percent': []
+        }
+        for idx, data in enumerate(all_data):
+            if group is not None and group != 'all':
+                group_indices = self.get_atom_group_indices()[group]
+                current_data = data[group_indices]
+            else:
+                current_data = data
+            centro_symmetric_values = current_data[:, 5]
+            classifications = self.classify_atoms(centro_symmetric_values)
+            evolution['mean'].append(np.mean(centro_symmetric_values))
+            evolution['max'].append(np.max(centro_symmetric_values))
+            total_atoms = len(centro_symmetric_values)
+            evolution['defect_percent'].append(np.sum(classifications['defect']) * 100 / total_atoms)
+            evolution['perfect_percent'].append(np.sum(classifications['perfect']) * 100 / total_atoms)
+            evolution['stacking_fault_percent'].append(np.sum(classifications['stacking_fault']) * 100 / total_atoms)
+        return timesteps, evolution
