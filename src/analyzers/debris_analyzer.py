@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_coords
 import numpy as np
 
 class DebrisAnalyzer:
@@ -70,15 +71,9 @@ class DebrisAnalyzer:
             timestep_idx = len(data) + timestep_idx
         
         current_data = data[timestep_idx]
-        x_idx = headers.index('x')
-        y_idx = headers.index('y')
-        z_idx = headers.index('z')
+        x, y, z = get_coords(current_data)
 
         cluster_idx = headers.index('c_cluster')
-
-        x = current_data[:, x_idx]
-        y = current_data[:, y_idx]
-        z = current_data[:, z_idx]
 
         cluster_values = current_data[:, cluster_idx]
 
