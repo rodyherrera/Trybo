@@ -44,14 +44,14 @@ def run_analysis(dump_folder, analysis_type=None, timestep=-1):
 
     # Dictionary mapping analysis types to functions
     analysis_functions = {
-        "cna": run_cna_analysis,
-        "coordination": run_coordination_analysis,
+        #"cna": run_cna_analysis,
+        #"coordination": run_coordination_analysis,
         "debris": run_debris_analysis,
-        "hotspot": run_hotspot_analysis, 
-        "vonmises": run_vonmises_analysis,
-        "centro_symmetric": run_centro_symmetric_analysis,
-        "velocity_squared": run_velocity_squared_analysis,
-        "energy": run_energy_analysis
+        #"hotspot": run_hotspot_analysis, 
+        #"vonmises": run_vonmises_analysis,
+        #"centro_symmetric": run_centro_symmetric_analysis,
+        #"velocity_squared": run_velocity_squared_analysis,
+        #"energy": run_energy_analysis
     }
     
     if analysis_type is None or analysis_type == "all":

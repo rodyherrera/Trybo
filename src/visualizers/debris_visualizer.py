@@ -42,13 +42,14 @@ class DebrisVisualizer:
             return
 
         plt.figure(figsize=(10, 6))
-        bars = plt.bar(sizes, counts, alpha=0.7, color='steelblue')
+        bar_width = 1000
+        bars = plt.bar(sizes, counts, width=bar_width, alpha=0.7, color='steelblue')
         plt.xlabel('Cluster Size (number of atoms)')
         plt.ylabel('Frequency')
         plt.title(f'Debris Cluster Size Distribution (Timestep {current_timestep})')
         plt.grid(True, linestyle='--', alpha=0.7, axis='y')
         
-        if log_scale and max(sizes) > min_size * 5:
+        if log_scale and len(sizes) >= 5 and max(sizes) > min_size * 5:
             plt.xscale('log')
 
         if sizes:
