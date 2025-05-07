@@ -143,7 +143,7 @@ class EnergyAnalyzer:
         else:
             # v_total_energy
             energy_col = 7
-        energy_values = data[:, energy_values]
+        energy_values = data[:, energy_col]
         # Create bins alongs the axis
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
