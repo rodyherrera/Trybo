@@ -105,3 +105,18 @@ class CentroSymmetricAnalyzer:
             evolution['perfect_percent'].append(np.sum(classifications['perfect']) * 100 / total_atoms)
             evolution['stacking_fault_percent'].append(np.sum(classifications['stacking_fault']) * 100 / total_atoms)
         return timesteps, evolution
+
+    def get_defect_regions(self, timestep_idx=-1, threshold=None, group=None):
+        if threshold is None:
+            threshold = self.defect_threshold
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        centro_symmetric_values = data[:, 5]
+        defect_mask = centro_symmetric_values >= threshold
+        defect_data = data[defect_mask]
+        return defect_data, defect_mask
