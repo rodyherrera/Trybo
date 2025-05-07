@@ -19,7 +19,7 @@ class CentroSymmetricVisualizer:
             'defect': 'red'
         }
     
-    def plot_centro_symmetric_distribution(self, timestep_idx=-1, group=None, log_sacle=False):
+    def plot_centro_symmetric_distribution(self, timestep_idx=-1, group=None, log_scale=False):
         timesteps = self.parser.get_timesteps()
 
         if timestep_idx < 0:
@@ -39,7 +39,7 @@ class CentroSymmetricVisualizer:
         for struct_type, (min_value, max_value) in self.analyzer.structure_ranges.items():
             if min_value > 0:
                 plt.axvline(min_value, color=self.structure_colors.get(struct_type, 'gray'), linestyle='--', alpha=0.7, label=f'{struct_type} threshold: {min_value}')
-        if log_sacle:
+        if log_scale:
             ax.set_yscale('log')
         # Add annotations for structure classifications
         y_max = ax.get_ylim()[1]
