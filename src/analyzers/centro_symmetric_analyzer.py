@@ -49,3 +49,33 @@ class CentroSymmetricAnalyzer:
             mask = (centro_symmetric_values >= min_value) & (centro_symmetric_values < max_value)
             classifications[struct_type] = mask
         return classifications
+
+    def get_defect_statistics(self, timestep_idx=-1, group=None):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        
+        centro_symmetric_values = data[:, 5]
+        classifications = self.classify_atoms(centro_symmetric_values)
+        total_atoms = len(centro_symmetric_values)
+        stats = {
+            'total_atoms': total_atoms,
+            'mean': np.mean(centro_symmetric_values),
+            'max': np.max(centro_symmetric_values),
+            'min': np.min(centro_symmetric_values),
+            'std': np.std(centro_symmetric_values),
+            'percent_defect': np.sum(classifications['defect']) * 100 / total_atoms,
+        }
+
+        for struct_type, mask in classifications.items():
+            count = np.sum(mask)
+            stats[f'{struct_type}_count'] = count
+            stats[f'{struct_type}_percent'] = count * 100 / total_atoms
+        
+        return stats
