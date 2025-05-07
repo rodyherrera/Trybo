@@ -1,6 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.vonmises_analyzer import VonMisesAnalyzer
-from utilities.analyzer import get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -128,7 +128,7 @@ class VonmisesVisualizer:
         current_timestep = timesteps[timestep_idx]
 
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
 
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)

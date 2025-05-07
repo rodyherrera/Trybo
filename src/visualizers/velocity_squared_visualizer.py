@@ -1,5 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.velocity_squared_analyzer import VelocitySquaredAnalyzer
+from utilities.analyzer import get_atom_group_indices
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
@@ -17,7 +18,7 @@ class VelocitySquaredVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
@@ -68,7 +69,7 @@ class VelocitySquaredVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         velocity_squared = data[:, 5]
@@ -94,7 +95,7 @@ class VelocitySquaredVisualizer:
         current_timestep = timesteps[timestep_idx]
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             filtered_data = data[group_indices]
             hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile, group)
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)

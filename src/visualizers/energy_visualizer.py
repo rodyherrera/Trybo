@@ -1,5 +1,6 @@
 from core.base_parser import BaseParser
 from analyzers.energy_analyzer import EnergyAnalyzer
+from utilities.analyzer import get_atom_group_indices
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -23,7 +24,7 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         if energy_type == 'kinetic':
             # c_ke_mobile
@@ -114,7 +115,7 @@ class EnergyVisualizer:
         current_timestep = timesteps[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
@@ -163,7 +164,7 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             filtered_data = data[group_indices]
             high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type, group)
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
@@ -337,7 +338,7 @@ class EnergyVisualizer:
         current_timestep = timesteps[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         
         # Extract energy values

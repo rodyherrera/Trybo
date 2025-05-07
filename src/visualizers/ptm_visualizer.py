@@ -1,6 +1,6 @@
 from analyzers.ptm_analyzer import PTMAnalyzer
 from core.base_parser import BaseParser
-from utilities.analyzer import get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
 import matplotlib.animation as animation
 import matplotlib.pyplot as plt
 import numpy as np
@@ -73,7 +73,7 @@ class PTMVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         x, y, z = self.parser.get_atoms_spatial_coordinates()
         # c_ptm[1]
@@ -114,7 +114,7 @@ class PTMVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         rmsd_values = data[:, 6]
         valid_rmsd = rmsd_values[~np.isinf(rmsd_values) & ~np.isnan(rmsd_values)]
