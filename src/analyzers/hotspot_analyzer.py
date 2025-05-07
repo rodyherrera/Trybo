@@ -104,7 +104,7 @@ class HotspotAnalyzer:
                     if distance <= cutoff:
                         queue.append(i)
                         unassigned.remove(i)
-            clusters[cluster_id] = hotspot_atoms_indices[current_cluster]
+            clusters[cluster_id] = hotspot_atoms_indices[np.array(current_cluster)]
             cluster_id += 1
         cluster_sizes = { cluster_id: len(indices) for cluster_id, indices in clusters.items() }
         cluster_positions = {}
