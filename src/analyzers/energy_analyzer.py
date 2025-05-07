@@ -63,3 +63,34 @@ class EnergyAnaylizer:
         }
         
         return stats
+
+    def get_energy_evolution(self, group=None, energy_type='total'):
+        timesteps = self.parser.get_timesteps()
+        all_data = self.parser.get_data()
+        # TODO: REFACTOR THIS DUPLICATED CODE
+        if energy_type == 'kinetic':
+            # c_ke_mobile
+            energy_col = 5
+        elif energy_type == 'potential':
+            # c_pe_mobile
+            energy_col = 6
+        else:
+            # v_total_energy
+            energy_col = 7
+        average_energy = []
+        max_energy = []
+        min_energy = []
+        sum_energy = []
+        for idx, data in enumerate(all_data):
+            if group is not None and group != 'all':
+                group_indices = self.get_atom_group_indices()[group]
+                current_data = data[group_indices]
+            else:
+                current_data = data
+            energy_values = current_data[:, energy_col]
+            average_energy.append(np.mean(energy_values))
+            max_energy.append(np.max(energy_values))
+            min_energy.append(np.min(energy_values))
+            sum_energy.append(np.sum(energy_values))
+        return timesteps, average_energy, max_energy, min_energy, sum_energy
+    
