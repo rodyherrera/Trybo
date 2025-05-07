@@ -70,3 +70,23 @@ class VelocitySquaredAnalyzer:
             max_temperature.append(np.max(temperature))
             min_temperature.append(np.min(temperature))
         return timesteps, average_temperature, max_temperature, min_temperature
+
+    def get_temperature_statistics(self, timestep_idx=-1, group=None):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        velocity_squared = data[:, 5]
+        temperature = self.velocity_to_temperature(velocity_squared)
+        stats = {
+            'mean': np.mean(temperature),
+            'median': np.median(temperature),
+            'max': np.max(temperature),
+            'min': np.min(temperature),
+            'std': np.std(temperature)
+        }
+        
+        return stats
