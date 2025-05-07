@@ -123,3 +123,35 @@ class EnergyAnaylizer:
         high_energy_data = data[high_energy_mask]
         return high_energy_data, high_energy_mask
     
+    def calculate_energy_profile(self, timestep_idx=-1, axis='z', n_bins=20, energy_type='total'):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        if axis == 'x':
+            coords = x
+        elif axis == 'y':
+            coords = y
+        else:
+            coords = z
+        if energy_type == 'kinetic':
+            # c_ke_mobile
+            energy_col = 5
+        elif energy_type == 'potential':
+            # c_pe_mobile
+            energy_col = 6
+        else:
+            # v_total_energy
+            energy_col = 7
+        energy_values = data[:, energy_values]
+        # Create bins alongs the axis
+        bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
+        bin_centers = 0.5 * (bins[1:] + bins[:-1])
+        # Calculate average energy for each bin
+        digitized = np.digitize(coords, bins)
+        bin_energies = [energy_values[digitized == i].mean() for i in range(1, len(bins))]
+        
+        return bin_centers, bin_energies
