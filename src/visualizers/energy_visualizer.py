@@ -215,3 +215,53 @@ class EnergyVisualizer:
         
         plt.tight_layout()
         plt.savefig(f'high_{energy_type}_energy_regions_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_energy_heatmaps(self, timestep_idx=-1, energy_type='total'):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        data = self.parser.get_data()[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
+        
+        x = data[:, 2]
+        y = data[:, 3]
+        z = data[:, 4]
+        if energy_type == 'kinetic':
+            energy_col = 5
+            title_prefix = 'Kinetic'
+            cmap = self.energy_cmaps['kinetic']
+        elif energy_type == 'potential':
+            energy_col = 6
+            title_prefix = 'Potential'
+            cmap = self.energy_cmaps['potential']
+        else:  # total
+            energy_col = 7
+            title_prefix = 'Total'
+            cmap = self.energy_cmaps['total']
+        energy_values = data[:, energy_col]
+        fig, axs = plt.subplots(1, 3, figsize=(18, 6))
+        bins = 50
+                
+        hxy = axs[0].hexbin(x, y, C=energy_values, gridsize=bins, reduce_C_function=np.mean, cmap=cmap)
+        axs[0].set_title(f'{title_prefix} Energy Map - XY Plane (Top View)')
+        axs[0].set_xlabel('X (Å)')
+        axs[0].set_ylabel('Y (Å)')
+        fig.colorbar(hxy, ax=axs[0], label=f'Average {title_prefix} Energy (eV)')
+        
+        hxz = axs[1].hexbin(x, z, C=energy_values, gridsize=bins, reduce_C_function=np.mean, cmap=cmap)
+        axs[1].set_title(f'{title_prefix} Energy Map - XZ Plane (Side View)')
+        axs[1].set_xlabel('X (Å)')
+        axs[1].set_ylabel('Z (Å)')
+        fig.colorbar(hxz, ax=axs[1], label=f'Average {title_prefix} Energy (eV)')
+        
+        hyz = axs[2].hexbin(y, z, C=energy_values, gridsize=bins, reduce_C_function=np.mean, cmap=cmap)
+        axs[2].set_title(f'{title_prefix} Energy Map - YZ Plane (Front View)')
+        axs[2].set_xlabel('Y (Å)')
+        axs[2].set_ylabel('Z (Å)')
+        fig.colorbar(hyz, ax=axs[2], label=f'Average {title_prefix} Energy (eV)')
+        
+        plt.suptitle(f'{title_prefix} Energy Heat Maps - Timestep {current_timestep}', y=1.05)
+        plt.tight_layout()
+        plt.savefig(f'{energy_type}_energy_heatmaps_timestep_{current_timestep}.png', dpi=300)
