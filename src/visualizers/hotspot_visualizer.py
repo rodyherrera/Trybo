@@ -19,7 +19,7 @@ class HotspotVisualizer:
         energy_bins, _, histogram_normalized, threshold = self.analyzer.get_energy_distribution(timestep_idx)
         stats = self.analyzer.get_hotspot_stats(timestep_idx)
         plt.figure(figsize=(12, 7))
-        bin_centers = (energy_bins[::-1] + energy_bins[1:]) / 2
+        bin_centers = (energy_bins[:-1] + energy_bins[1:]) / 2
         plt.bar(bin_centers, histogram_normalized, width=bin_centers[1] - bin_centers[0], alpha=0.7)
         if threshold is not None:
             plt.axvline(x=threshold, color='red', linestyle='--', label=f'Hotspot Threshold: {threshold:.2e}')
