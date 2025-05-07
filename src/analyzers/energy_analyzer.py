@@ -33,3 +33,33 @@ class EnergyAnaylizer:
         }
         
         return self._atom_groups
+    
+    def get_energy_statistics(self, timestep_idx=-1, group=None, energy_type='total'):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        if energy_type == 'kinetic':
+            # c_ke_mobile
+            energy_col = 5
+        elif energy_type == 'potential':
+            # c_pe_mobile
+            energy_col = 6
+        else:
+            # v_total_energy
+            energy_col = 7
+        energy_values = data[:, energy_col]
+                
+        stats = {
+            'mean': np.mean(energy_values),
+            'median': np.median(energy_values),
+            'max': np.max(energy_values),
+            'min': np.min(energy_values),
+            'std': np.std(energy_values),
+            'sum': np.sum(energy_values)
+        }
+        
+        return stats
