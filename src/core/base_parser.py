@@ -25,7 +25,7 @@ class BaseParser(ABC):
             x_idx = 2
             y_idx = 3
             z_idx = 4
-        self._atoms_spatial_coordinates_indices.append(x_idx, y_idx, z_idx)
+        self._atoms_spatial_coordinates_indices = [x_idx, y_idx, z_idx]
 
     def parse(self):
         timesteps = []
@@ -72,11 +72,9 @@ class BaseParser(ABC):
 
         return timesteps, data, headers
     
-    def get_atoms_spatial_coordinates(self, data = None):
+    def get_atoms_spatial_coordinates(self, data):
         if not self._is_parsed:
             self.parse()
-        if data is None:
-            data = self._data
         x_idx, y_idx, z_idx = self._atoms_spatial_coordinates_indices
         x = data[:, x_idx]
         y = data[:, y_idx]

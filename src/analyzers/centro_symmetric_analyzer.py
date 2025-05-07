@@ -26,7 +26,7 @@ class CentroSymmetricAnalyzer:
         if self._atom_groups is not None:
             return self._atom_groups
         data = self.parser.get_data()[0]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         z_min = np.min(z)
         z_max = np.max(z)
         z_threshold_lower = z_min + 2.5
@@ -125,7 +125,7 @@ class CentroSymmetricAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         centro_symmetric_values = data[:, 5]
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)

@@ -65,7 +65,7 @@ class CoordinationAnalyzer:
             timestep_idx = len(data) + timestep_idx
         
         current_data = data[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
         coord_idx = headers.index('c_coord')
         coord = current_data[:, coord_idx]
         return x, y, z, coord

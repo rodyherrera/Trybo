@@ -120,7 +120,7 @@ class CentroSymmetricVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
         
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         cs_values = data[:, 5]
         
         classifications = self.analyzer.classify_atoms(cs_values)

@@ -15,7 +15,7 @@ class VonMisesAnalyzer:
             return self.group_indices
 
         data = self.parser.get_data()[-1]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         z_min = np.min(z)
         z_max = np.max(z)
         # z_middle = (z_max + z_min) / 2

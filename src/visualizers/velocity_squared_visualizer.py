@@ -70,7 +70,7 @@ class VelocitySquaredVisualizer:
         if group is not None and group != 'all':
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
         fig = plt.figure(figsize=(12, 10))
@@ -112,7 +112,7 @@ class VelocitySquaredVisualizer:
         ax.set_xlabel('X (Å)')
         ax.set_ylabel('Y (Å)')
         ax.set_zlabel('Z (Å)')
-        title = f'Puntos Calientes (>{threshold_percentile}%) - Timestep {current_timestep}'
+        title = f'Hotspots (>{threshold_percentile}%) - Timestep {current_timestep}'
         if group is not None and group != 'all':
             title += f' - Group: {group}'
         ax.set_title(title)
@@ -125,7 +125,7 @@ class VelocitySquaredVisualizer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))

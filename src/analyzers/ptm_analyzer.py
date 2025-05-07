@@ -34,7 +34,7 @@ class PTMAnalyzer:
         if self._atoms_groups is not None:
             return self._atoms_groups
         data = self.parser.get_data()[0]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
 
         # Dimensions
         z_min = np.min(z)

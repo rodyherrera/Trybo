@@ -12,7 +12,7 @@ class EnergyAnalyzer:
             return self._atom_groups
 
         data = self.parser.get_data()[0]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
 
         z_min = np.min(z)
         z_max = np.max(z)

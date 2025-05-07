@@ -70,7 +70,7 @@ class DebrisAnalyzer:
             timestep_idx = len(data) + timestep_idx
         
         current_data = data[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
 
         cluster_idx = headers.index('c_cluster')
 
@@ -87,7 +87,7 @@ class DebrisAnalyzer:
                     np.mean(z[atom_indices])
                 )
         atom_coords = {
-            'x:': x,
+            'x': x,
             'y': y,
             'z': z,
             'cluster_id': cluster_values

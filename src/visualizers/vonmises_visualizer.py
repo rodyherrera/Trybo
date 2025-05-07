@@ -35,7 +35,7 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timestep_idx[timestep_idx]
 
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         stress = data[:, 5]
 
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))
@@ -131,7 +131,7 @@ class VonmisesVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
 
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         stress = data[:, 5]
 
         fig = plt.figure(figsize=(12, 10))
@@ -169,7 +169,7 @@ class VonmisesVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
-        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         axis_name = axis.upper()
         stress = data[:, 5]

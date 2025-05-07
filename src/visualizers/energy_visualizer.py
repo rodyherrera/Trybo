@@ -117,7 +117,7 @@ class EnergyVisualizer:
             group_indices = self.analyzer.get_atom_group_indices()[group]
             data = data[group_indices]
         
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         
         if energy_type == 'kinetic':
             energy_col = 5
@@ -215,7 +215,7 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         if energy_type == 'kinetic':
             energy_col = 5
             title_prefix = 'Kinetic'

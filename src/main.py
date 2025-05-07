@@ -24,8 +24,6 @@ import logging
 from pathlib import Path
 
 # Set up logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger("nanoparticle_wear")
 
 def run_analysis(dump_folder, analysis_type=None, timestep=-1):
     """
@@ -43,295 +41,288 @@ def run_analysis(dump_folder, analysis_type=None, timestep=-1):
     # Change to output directory for saving visualizations
     original_dir = os.getcwd()
     os.chdir(output_dir)
+
+    # Dictionary mapping analysis types to functions
+    analysis_functions = {
+        "cna": run_cna_analysis,
+        "coordination": run_coordination_analysis,
+        "debris": run_debris_analysis,
+        "hotspot": run_hotspot_analysis, 
+        "vonmises": run_vonmises_analysis,
+        "centro_symmetric": run_centro_symmetric_analysis,
+        "velocity_squared": run_velocity_squared_analysis,
+        "energy": run_energy_analysis
+    }
     
-    try:
-        # Dictionary mapping analysis types to functions
-        analysis_functions = {
-            "cna": run_cna_analysis,
-            "coordination": run_coordination_analysis,
-            "debris": run_debris_analysis,
-            "hotspot": run_hotspot_analysis, 
-            "vonmises": run_vonmises_analysis,
-            "centro_symmetric": run_centro_symmetric_analysis,
-            "velocity_squared": run_velocity_squared_analysis,
-            "energy": run_energy_analysis
-        }
+    if analysis_type is None or analysis_type == "all":
+        # Run all analyses
+        print(f"Running all analyses on data from {dump_folder}")
+        for name, func in analysis_functions.items():
+            print(f"Starting {name} analysis")
+            func(dump_folder, timestep)
+            print(f"Completed {name} analysis")
+    elif analysis_type in analysis_functions:
+        # Run specific analysis
+        print(f"Running {analysis_type} analysis on data from {dump_folder}")
+        analysis_functions[analysis_type](dump_folder, timestep)
+    else:
+        print(f"Unknown analysis type: {analysis_type}")
+        print(f"Available analysis types: {', '.join(analysis_functions.keys())}")
+        return
         
-        if analysis_type is None or analysis_type == "all":
-            # Run all analyses
-            logger.info(f"Running all analyses on data from {dump_folder}")
-            for name, func in analysis_functions.items():
-                try:
-                    logger.info(f"Starting {name} analysis")
-                    func(dump_folder, timestep)
-                    logger.info(f"Completed {name} analysis")
-                except Exception as e:
-                    print(e)
-                    logger.error(f"Error in {name} analysis: {e}")
-        elif analysis_type in analysis_functions:
-            # Run specific analysis
-            logger.info(f"Running {analysis_type} analysis on data from {dump_folder}")
-            analysis_functions[analysis_type](dump_folder, timestep)
-        else:
-            logger.error(f"Unknown analysis type: {analysis_type}")
-            print(f"Available analysis types: {', '.join(analysis_functions.keys())}")
-            return
-            
-        elapsed_time = time.time() - start_time
-        logger.info(f"All analyses completed in {elapsed_time:.2f} seconds")
-        print(f"Analysis results saved to {output_dir}")
-        
-    except Exception as e:
-        logger.error(f"Error during analysis: {e}")
-    finally:
-        os.chdir(original_dir)
+    elapsed_time = time.time() - start_time
+    print(f"All analyses completed in {elapsed_time:.2f} seconds")
+    print(f"Analysis results saved to {output_dir}")
+    
+    print(f"Error during analysis: {e}")
+    os.chdir(original_dir)
 
 def run_cna_analysis(dump_folder, timestep=-1):
     """Run Common Neighbor Analysis visualization"""
-    logger.info("Initializing CNA analysis")
+    print("Initializing CNA analysis")
     cna_file = os.path.join(dump_folder, "cna.dump")
     
     if not os.path.exists(cna_file):
-        logger.error(f"CNA file not found: {cna_file}")
+        print(f"CNA file not found: {cna_file}")
         return
     
     parser = CommonNeighborAnalysisParser(cna_file)
     visualizer = CommonNeighborAnalysisVisualizer(parser)
     
     # Generate all CNA visualizations
-    logger.info("Generating CNA distribution plot")
+    print("Generating CNA distribution plot")
     visualizer.plot_structure_distribution(timestep)
     
-    logger.info("Generating CNA evolution plot")
+    print("Generating CNA evolution plot")
     visualizer.plot_structure_evolution()
     
-    logger.info("Generating CNA spatial distribution heatmap")
+    print("Generating CNA spatial distribution heatmap")
     visualizer.plot_structure_heatmap(timestep)
     
-    logger.info("Generating CNA structure comparison")
+    print("Generating CNA structure comparison")
     visualizer.plot_structure_comparison(0, timestep)
 
 def run_coordination_analysis(dump_folder, timestep=-1):
     """Run Coordination analysis visualization"""
-    logger.info("Initializing Coordination analysis")
+    print("Initializing Coordination analysis")
     coord_file = os.path.join(dump_folder, "coordination.dump")
     
     if not os.path.exists(coord_file):
-        logger.error(f"Coordination file not found: {coord_file}")
+        print(f"Coordination file not found: {coord_file}")
         return
     
     parser = CoordinationParser(coord_file)
     visualizer = CoordinationVisualizer(parser)
     
     # Generate all Coordination visualizations
-    logger.info("Generating coordination distribution plot")
+    print("Generating coordination distribution plot")
     visualizer.plot_coord_distribution(timestep)
     
-    logger.info("Generating coordination evolution plot")
+    print("Generating coordination evolution plot")
     visualizer.plot_coord_evolution()
     
-    logger.info("Generating coordination spatial distribution")
+    print("Generating coordination spatial distribution")
     visualizer.plot_coord_spatial(timestep)
     
-    logger.info("Generating atom classification by coordination")
+    print("Generating atom classification by coordination")
     visualizer.plot_atom_classification(timestep)
     
-    logger.info("Generating coordination range distribution")
+    print("Generating coordination range distribution")
     visualizer.plot_coord_ranges(timestep)
     
-    logger.info("Generating coordination comparison")
+    print("Generating coordination comparison")
     visualizer.plot_coord_comparison(0, timestep)
 
 def run_debris_analysis(dump_folder, timestep=-1):
     """Run Debris Cluster analysis visualization"""
-    logger.info("Initializing Debris analysis")
+    print("Initializing Debris analysis")
     debris_file = os.path.join(dump_folder, "debris_clusters.dump")
     
     if not os.path.exists(debris_file):
-        logger.error(f"Debris file not found: {debris_file}")
+        print(f"Debris file not found: {debris_file}")
         return
     
     parser = DebrisParser(debris_file)
     visualizer = DebrisVisualizer(parser)
     
     # Generate all Debris visualizations
-    logger.info("Generating cluster evolution plot")
+    print("Generating cluster evolution plot")
     visualizer.plot_cluster_evolution()
     
-    logger.info("Generating cluster size distribution")
+    print("Generating cluster size distribution")
     visualizer.plot_cluster_size_distribution(timestep, min_size=2)
     
-    logger.info("Generating 3D cluster visualization")
+    print("Generating 3D cluster visualization")
     visualizer.plot_3d_cluster_visualization(timestep, min_size=3)
     
-    logger.info("Generating 2D projections of clusters")
+    print("Generating 2D projections of clusters")
     visualizer.plot_2d_projections(timestep, min_size=3)
     
-    logger.info("Generating largest clusters information table")
+    print("Generating largest clusters information table")
     visualizer.plot_largest_clusters_info(timestep)
 
 def run_hotspot_analysis(dump_folder, timestep=-1):
     """Run Hotspot analysis visualization"""
-    logger.info("Initializing Hotspot analysis")
+    print("Initializing Hotspot analysis")
     hotspot_file = os.path.join(dump_folder, "hotspots.dump")
     
     if not os.path.exists(hotspot_file):
-        logger.error(f"Hotspot file not found: {hotspot_file}")
+        print(f"Hotspot file not found: {hotspot_file}")
         return
     
     parser = HotspotParser(hotspot_file)
     visualizer = HotspotVisualizer(parser)
     
     # Generate all Hotspot visualizations
-    logger.info("Generating energy distribution plot")
+    print("Generating energy distribution plot")
     visualizer.plot_energy_distribution(timestep)
     
-    logger.info("Generating hotspot evolution plot")
+    print("Generating hotspot evolution plot")
     visualizer.plot_hotspot_evolution()
     
-    logger.info("Generating hotspot spatial distribution")
+    print("Generating hotspot spatial distribution")
     visualizer.plot_hotspot_spatial(timestep)
     
-    logger.info("Generating 3D hotspot clusters")
+    print("Generating 3D hotspot clusters")
     visualizer.plot_hotspot_clusters_3d(timestep)
     
-    logger.info("Generating hotspot heatmap")
+    print("Generating hotspot heatmap")
     visualizer.plot_hotspot_heatmap(timestep)
 
 def run_vonmises_analysis(dump_folder, timestep=-1):
     """Run von Mises stress analysis visualization"""
-    logger.info("Initializing von Mises analysis")
+    print("Initializing von Mises analysis")
     vonmises_file = os.path.join(dump_folder, "vonmises.dump")
     
     if not os.path.exists(vonmises_file):
-        logger.error(f"Von Mises file not found: {vonmises_file}")
+        print(f"Von Mises file not found: {vonmises_file}")
         return
     
     parser = VonmisesParser(vonmises_file)
     visualizer = VonmisesVisualizer(parser)
     
     # Generate all von Mises visualizations
-    logger.info("Generating stress evolution plot")
+    print("Generating stress evolution plot")
     visualizer.plot_stress_evolution()
     
-    logger.info("Generating stress heatmaps")
+    print("Generating stress heatmaps")
     visualizer.plot_stress_heatmaps(timestep)
     
-    logger.info("Generating stress distribution")
+    print("Generating stress distribution")
     visualizer.plot_stress_distribution(timestep)
     
-    logger.info("Generating stress by groups")
+    print("Generating stress by groups")
     visualizer.plot_stress_by_groups()
     
-    logger.info("Generating 3D stress visualization")
+    print("Generating 3D stress visualization")
     visualizer.plot_stress_3d(timestep)
     visualizer.plot_stress_3d(timestep, group='nanoparticle', percentile_threshold=90)
     
-    logger.info("Generating stress by layer")
+    print("Generating stress by layer")
     visualizer.plot_stress_by_layer(timestep, axis='z')
 
 def run_centro_symmetric_analysis(dump_folder, timestep=-1):
     """Run Centro-Symmetric analysis visualization"""
-    logger.info("Initializing Centro-Symmetric analysis")
+    print("Initializing Centro-Symmetric analysis")
     cs_file = os.path.join(dump_folder, "center_symmetric.dump")
     
     if not os.path.exists(cs_file):
-        logger.error(f"Centro-Symmetric file not found: {cs_file}")
+        print(f"Centro-Symmetric file not found: {cs_file}")
         return
         
     parser = CentroSymmetricParser(cs_file)
     visualizer = CentroSymmetricVisualizer(parser)
     
     # Generate all Centro-Symmetric visualizations
-    logger.info("Generating Centro-Symmetric parameter distribution")
+    print("Generating Centro-Symmetric parameter distribution")
     visualizer.plot_centro_symmetric_distribution(timestep)
     visualizer.plot_centro_symmetric_distribution(timestep, log_scale=True)
     
     # If there are multiple timesteps, show evolution
     timesteps = parser.get_timesteps()
     if len(timesteps) > 1:
-        logger.info("Generating defect evolution plots")
+        print("Generating defect evolution plots")
         visualizer.plot_defect_evolution()
     
-    logger.info("Generating 3D visualization of crystal structure")
+    print("Generating 3D visualization of crystal structure")
     visualizer.plot_defect_3d(timestep)
     
-    logger.info("Generating visualization of defect regions")
+    print("Generating visualization of defect regions")
     visualizer.plot_defect_regions(timestep)
     
-    logger.info("Generating centro-symmetric heat maps")
+    print("Generating centro-symmetric heat maps")
     visualizer.plot_centro_symmetric_heatmaps(timestep)
     
-    logger.info("Comparing defects between groups")
+    print("Comparing defects between groups")
     visualizer.plot_defect_by_groups(timestep)
     
-    logger.info("Generating defect profile along Z-axis")
+    print("Generating defect profile along Z-axis")
     visualizer.plot_defect_profile(timestep, axis='z')
     
-    logger.info("Generating nanoparticle-specific analysis")
+    print("Generating nanoparticle-specific analysis")
     visualizer.plot_centro_symmetric_distribution(timestep, group='nanoparticle')
     visualizer.plot_defect_regions(timestep, group='nanoparticle')
     
     if len(timesteps) > 1:
-        logger.info("Generating nanoparticle defect evolution")
+        print("Generating nanoparticle defect evolution")
         visualizer.plot_defect_evolution(group='nanoparticle')
 
 def run_velocity_squared_analysis(dump_folder, timestep=-1):
     """Run Velocity Squared analysis visualization"""
-    logger.info("Initializing Velocity Squared analysis")
+    print("Initializing Velocity Squared analysis")
     vs_file = os.path.join(dump_folder, "velocity_squared.dump")
     
     if not os.path.exists(vs_file):
-        logger.error(f"Velocity Squared file not found: {vs_file}")
+        print(f"Velocity Squared file not found: {vs_file}")
         return
         
     parser = VelocitySquaredParser(vs_file)
     visualizer = VelocitySquaredVisualizer(parser)
     
     # Generate all Temperature visualizations
-    logger.info("Generating temperature distribution plot")
+    print("Generating temperature distribution plot")
     visualizer.plot_temperature_distribution(timestep)
     
     # If there are multiple timesteps, show evolution
     timesteps = parser.get_timesteps()
     if len(timesteps) > 1:
-        logger.info("Generating temperature evolution plots")
+        print("Generating temperature evolution plots")
         visualizer.plot_temperature_evolution()
     
-    logger.info("Generating 3D visualization of temperature")
+    print("Generating 3D visualization of temperature")
     visualizer.plot_temperature_3d(timestep)
     
-    logger.info("Generating visualization of hot spots")
+    print("Generating visualization of hot spots")
     visualizer.plot_hot_spots(timestep, threshold_percentile=95)
     
-    logger.info("Generating temperature heat maps")
+    print("Generating temperature heat maps")
     visualizer.plot_temperature_heatmaps(timestep)
     
     if len(timesteps) > 1:
-        logger.info("Generating temperature comparison between groups")
+        print("Generating temperature comparison between groups")
         visualizer.plot_temperature_by_groups()
     
-    logger.info("Generating temperature gradient along Z-axis")
+    print("Generating temperature gradient along Z-axis")
     visualizer.plot_temperature_gradient(timestep, axis='z')
     
-    logger.info("Generating nanoparticle-specific analysis")
+    print("Generating nanoparticle-specific analysis")
     visualizer.plot_temperature_distribution(timestep, group='nanoparticle')
     visualizer.plot_hot_spots(timestep, threshold_percentile=95, group='nanoparticle')
 
 def run_energy_analysis(dump_folder, timestep=-1):
     """Run Energy analysis visualization"""
-    logger.info("Initializing Energy analysis")
+    print("Initializing Energy analysis")
     energy_file = os.path.join(dump_folder, "energy.dump")
     
     if not os.path.exists(energy_file):
-        logger.error(f"Energy file not found: {energy_file}")
+        print(f"Energy file not found: {energy_file}")
         return
         
     parser = EnergyParser(energy_file)
     visualizer = EnergyVisualizer(parser)
     
     # Generate all Energy visualizations
-    logger.info("Generating energy distribution plots")
+    print("Generating energy distribution plots")
     visualizer.plot_energy_distribution(timestep, energy_type='kinetic')
     visualizer.plot_energy_distribution(timestep, energy_type='potential')
     visualizer.plot_energy_distribution(timestep, energy_type='total')
@@ -339,35 +330,35 @@ def run_energy_analysis(dump_folder, timestep=-1):
     # If there are multiple timesteps, show evolution
     timesteps = parser.get_timesteps()
     if len(timesteps) > 1:
-        logger.info("Generating energy evolution plots")
+        print("Generating energy evolution plots")
         visualizer.plot_energy_evolution(energy_type='kinetic')
         visualizer.plot_energy_evolution(energy_type='potential')
         visualizer.plot_energy_evolution(energy_type='total')
     
-    logger.info("Generating 3D energy visualizations")
+    print("Generating 3D energy visualizations")
     visualizer.plot_energy_3d(timestep, energy_type='kinetic')
     visualizer.plot_energy_3d(timestep, energy_type='potential')
     visualizer.plot_energy_3d(timestep, energy_type='total')
     
-    logger.info("Generating high energy region visualizations")
+    print("Generating high energy region visualizations")
     visualizer.plot_high_energy_regions(timestep, energy_type='kinetic')
     visualizer.plot_high_energy_regions(timestep, energy_type='potential')
     visualizer.plot_high_energy_regions(timestep, energy_type='total')
     
-    logger.info("Generating energy heat maps")
+    print("Generating energy heat maps")
     visualizer.plot_energy_heatmaps(timestep, energy_type='total')
     
     if len(timesteps) > 1:
-        logger.info("Generating energy comparison between groups")
+        print("Generating energy comparison between groups")
         visualizer.plot_energy_by_groups(energy_type='total')
     
-    logger.info("Generating energy profile along Z-axis")
+    print("Generating energy profile along Z-axis")
     visualizer.plot_energy_profile(timestep, axis='z')
     
-    logger.info("Generating energy type comparison")
+    print("Generating energy type comparison")
     visualizer.plot_energy_comparison(timestep)
     
-    logger.info("Generating nanoparticle-specific analysis")
+    print("Generating nanoparticle-specific analysis")
     visualizer.plot_energy_distribution(timestep, group='nanoparticle')
     visualizer.plot_high_energy_regions(timestep, energy_type='total', group='nanoparticle')
 
@@ -418,7 +409,7 @@ Examples:
     # Validate dump folder exists
     dump_path = Path(args.dump_folder)
     if not dump_path.exists() or not dump_path.is_dir():
-        logger.error(f"Error: Dump folder '{args.dump_folder}' does not exist or is not a directory")
+        print(f"Error: Dump folder '{args.dump_folder}' does not exist or is not a directory")
         return 1
     
     # Run selected analysis
