@@ -339,3 +339,64 @@ class EnergyVisualizer:
         plt.savefig(f'{energy_type}_energy_profile_{axis}_timestep_{current_timestep}.png', dpi=300)
         
         plt.show()
+
+    def plot_energy_comparison(self, timestep_idx=-1, group=None):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        data = self.parser.get_data()[timestep_idx]
+        current_timestep = timesteps[timestep_idx]
+        
+        if group is not None and group != 'all':
+            group_indices = self.analyzer.get_atom_group_indices()[group]
+            data = data[group_indices]
+        
+        # Extract energy values
+        ke_values = data[:, 5]
+        pe_values = data[:, 6] 
+        te_values = data[:, 7]
+        
+        # Create 3 side-by-side histograms
+        fig, (ax1, ax2, ax3) = plt.subplots(1, 3, figsize=(18, 6))
+        
+        # Kinetic energy histogram
+        sns.histplot(ke_values, kde=True, ax=ax1, color='blue')
+        ax1.set_title('Kinetic Energy Distribution')
+        ax1.set_xlabel('Kinetic Energy (eV)')
+        ax1.set_ylabel('Frequency')
+        ax1.axvline(np.mean(ke_values), color='red', linestyle='--', 
+                  label=f'Mean: {np.mean(ke_values):.3f}')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.legend()
+        
+        # Potential energy histogram
+        sns.histplot(pe_values, kde=True, ax=ax2, color='green')
+        ax2.set_title('Potential Energy Distribution')
+        ax2.set_xlabel('Potential Energy (eV)')
+        ax2.set_ylabel('Frequency')
+        ax2.axvline(np.mean(pe_values), color='red', linestyle='--', 
+                  label=f'Mean: {np.mean(pe_values):.3f}')
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.legend()
+        
+        # Total energy histogram
+        sns.histplot(te_values, kde=True, ax=ax3, color='red')
+        ax3.set_title('Total Energy Distribution')
+        ax3.set_xlabel('Total Energy (eV)')
+        ax3.set_ylabel('Frequency')
+        ax3.axvline(np.mean(te_values), color='blue', linestyle='--', 
+                  label=f'Mean: {np.mean(te_values):.3f}')
+        ax3.grid(True, linestyle='--', alpha=0.7)
+        ax3.legend()
+        
+        title = f'Energy Distribution Comparison (Timestep {current_timestep})'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        plt.suptitle(title)
+        plt.tight_layout()
+        
+        plt.savefig(f'energy_comparison_timestep_{current_timestep}.png', dpi=300)
+        
+        plt.show()
