@@ -7,12 +7,10 @@ class CoordinationAnalyzer:
     
     def get_coord_data(self, timestep_idx=-1):
         data = self.parser.get_data()
-        headers = self.parser.get_headers()
 
         if timestep_idx < 0:
             timestep_idx = len(data) + timestep_idx
         
-        current_data = data[timestep_idx]
         coord_values = self.parser.get_column_data('c_coord', timestep_idx)
 
         return coord_values

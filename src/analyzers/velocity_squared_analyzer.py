@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
 import numpy as np
 
 class VelocitySquaredAnalyzer:
@@ -8,11 +8,6 @@ class VelocitySquaredAnalyzer:
         self._atom_groups = None
         # Conversion factor for metal units
         self.metal_units_conversion = 25.464
-
-    def get_atom_group_indices(self, timestep_idx):
-        data = self.parser.get_data()[timestep_idx]
-        self._atom_groups = self.parser.get_atom_group_indices(data)
-        return self._atom_groups
 
     def velocity_to_temperature(self, velocity_squared):
         # T = m * v² / (3 * k_B)
@@ -24,7 +19,7 @@ class VelocitySquaredAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         hot_threshold = np.percentile(velocity_squared, threshold_percentile)
@@ -40,7 +35,7 @@ class VelocitySquaredAnalyzer:
         min_temperature = []
         for idx, data in enumerate(all_data):
             if group is not None and group != 'all':
-                group_indices = self.get_atom_group_indices(idx)[group]
+                group_indices = get_atom_group_indices(self.parser, idx)[group]
                 current_data = data[group_indices]
             else:
                 current_data = data
@@ -57,7 +52,7 @@ class VelocitySquaredAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         temperature = self.velocity_to_temperature(velocity_squared)

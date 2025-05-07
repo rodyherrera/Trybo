@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_data_from_coord_axis
+from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
 import numpy as np
 
 class EnergyAnalyzer:
@@ -7,19 +7,13 @@ class EnergyAnalyzer:
         self.parser = parser
         self._atom_groups = None
 
-    def get_atom_group_indices(self, timestep_idx):
-        data = self.parser.get_data()[timestep_idx]
-        self._atom_groups = self.parser.get_atom_group_indices(data)
-        
-        return self._atom_groups
-    
     def get_energy_statistics(self, timestep_idx=-1, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
@@ -45,7 +39,7 @@ class EnergyAnalyzer:
         sum_energy = []
         for idx, data in enumerate(all_data):
             if group is not None and group != 'all':
-                group_indices = self.get_atom_group_indices(idx)[group]
+                group_indices = get_atom_group_indices(self.parser, idx)[group]
                 current_data = data[group_indices]
             else:
                 current_data = data
@@ -62,7 +56,7 @@ class EnergyAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices(timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]

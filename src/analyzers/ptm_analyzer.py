@@ -1,8 +1,9 @@
 import numpy as np
 from core.base_parser import BaseParser
+from utilities.analyzer import get_atom_group_indices
 
 class PTMAnalyzer:
-    def __init__(self, parser):
+    def __init__(self, parser: BaseParser):
         self.parser = parser
 
         self.structure_names = {
@@ -30,14 +31,6 @@ class PTMAnalyzer:
         }
 
         self._atoms_groups = None
-
-    def get_atom_group_indices(self):
-        if self._atoms_groups is not None:
-            return self._atoms_groups
-        data = self.parser.get_data()[0]
-        self._atoms_groups = self.parser.get_atom_group_indices(data)
-
-        return self._atoms_groups
     
     def get_structure_distribution(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
@@ -48,7 +41,7 @@ class PTMAnalyzer:
         data = self.parser.get_data()[timestep_idx]
 
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         
         structure_types = data[:, 5].astype(int)
@@ -60,10 +53,8 @@ class PTMAnalyzer:
         return counts
     
     def get_rmsd_statistics(self, timestep_idx=-1, group=None):
-        timesteps = self.parser.get_data()[timestep_idx]
-        
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
         
         rmsd_values = data[:, 6]

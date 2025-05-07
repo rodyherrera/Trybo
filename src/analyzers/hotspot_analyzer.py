@@ -7,7 +7,6 @@ class HotspotAnalyzer:
 
     def get_hotspot_data(self, timestep_idx=-1):
         data = self.parser.get_data()
-        headers = self.parser.get_headers()
 
         if timestep_idx < 0:
             timestep_idx = len(data) + timestep_idx

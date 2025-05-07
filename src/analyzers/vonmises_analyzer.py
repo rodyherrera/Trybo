@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+from utilities.analyzer import get_atom_group_indices
 import numpy as np
 
 class VonMisesAnalyzer:
@@ -9,14 +10,6 @@ class VonMisesAnalyzer:
         self._average_stress_cache = None
         self._max_stress_cache = None
         self._min_stress_cache = None
-
-    def get_atom_group_indices(self):
-        if self.group_indices is not None:
-            return self.group_indices
-        data = self.parser.get_data()[-1]
-        self.group_indices = self.parser.get_atom_group_indices(data)
-
-        return self.group_indices
 
     def get_stress_evolution(self):
         if self._average_stress_cache is not None:
@@ -43,7 +36,7 @@ class VonMisesAnalyzer:
         Args:
             group: ('lower_plane', 'upper_plane', 'nanoparticle', 'all')
         '''
-        group_indices = self.get_atom_group_indices()[group]
+        group_indices = get_atom_group_indices(self.parser, -1)[group]
         average_stress = []
         max_stress = []
         min_stress = []
