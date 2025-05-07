@@ -13,7 +13,7 @@ class HotspotVisualizer:
         timesteps = self.parser.get_timesteps()
 
         if timestep_idx < 0:
-            timestep_idx = len(timestep_idx) + timestep_idx
+            timestep_idx = len(timesteps) + timestep_idx
         
         current_timestep = timesteps[timestep_idx]
         energy_bins, _, histogram_normalized, threshold = self.analyzer.get_energy_distribution(timestep_idx)
