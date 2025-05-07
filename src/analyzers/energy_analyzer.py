@@ -94,3 +94,32 @@ class EnergyAnaylizer:
             sum_energy.append(np.sum(energy_values))
         return timesteps, average_energy, max_energy, min_energy, sum_energy
     
+    def get_high_energy_regions(self, timestep_idx=-1, threshold_percentile=95, energy_type='total', group=None):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        data = self.parser.get_data()[timestep_idx]
+        if group is not None and group != 'all':
+            group_indices = self.get_atom_group_indices()[group]
+            data = data[group_indices]
+        if energy_type == 'kinetic':
+            # c_ke_mobile
+            energy_col = 5
+        elif energy_type == 'potential':
+            # c_pe_mobile
+            energy_col = 6
+        else:
+            # v_total_energy
+            energy_col = 7
+        energy_values = data[:, energy_col]
+        # Calculate threshold for high energy
+        # For potential energy, we're looking for the most negative values (most stable)
+        if energy_type == 'potential':
+            high_threshold = np.percentile(energy_values, 100 - threshold_percentile)
+            high_energy_mask = energy_values <= high_threshold
+        else:
+            high_threshold = np.percentile(energy_values, threshold_percentile)
+            high_energy_mask = energy_values >= high_threshold
+        high_energy_data = data[high_energy_mask]
+        return high_energy_data, high_energy_mask
+    
