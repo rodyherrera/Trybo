@@ -265,3 +265,39 @@ class EnergyVisualizer:
         plt.suptitle(f'{title_prefix} Energy Heat Maps - Timestep {current_timestep}', y=1.05)
         plt.tight_layout()
         plt.savefig(f'{energy_type}_energy_heatmaps_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_energy_by_groups(self, energy_type='total'):
+        timesteps, nano_average, _, _, nano_sum = self.analyzer.get_energy_evolution('nanoparticle', energy_type)
+        _, upper_average, _, _, upper_sum = self.analyzer.get_energy_evolution('upper_plane', energy_type)
+        _, lower_average, _, _, lower_sum = self.analyzer.get_energy_evolution('lower_plane', energy_type)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 12), sharex=True)
+        if energy_type == 'kinetic':
+            title_prefix = 'Kinetic'
+            y_label = 'Kinetic Energy (eV)'
+        elif energy_type == 'potential':
+            title_prefix = 'Potential'
+            y_label = 'Potential Energy (eV)'
+        else:  # total
+            title_prefix = 'Total'
+            y_label = 'Total Energy (eV)'
+        ax1.plot(timesteps, nano_average, 'r-', label='Nanoparticle')
+        ax1.plot(timesteps, upper_average, 'g-', label='Upper Plane')
+        ax1.plot(timesteps, lower_average, 'b-', label='Lower Plane')
+        
+        ax1.set_ylabel(f'Average {y_label} per Atom')
+        ax1.set_title(f'Comparison of Average {title_prefix} Energy per Atom Between Groups')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax1.legend()
+        
+        ax2.plot(timesteps, nano_sum, 'r-', label='Nanoparticle')
+        ax2.plot(timesteps, upper_sum, 'g-', label='Upper Plane')
+        ax2.plot(timesteps, lower_sum, 'b-', label='Lower Plane')
+        
+        ax2.set_xlabel('Timestep')
+        ax2.set_ylabel(f'Total {y_label} of Group')
+        ax2.set_title(f'Comparison of Total {title_prefix} Energy Between Groups')
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        ax2.legend()
+
+        plt.tight_layout()
+        plt.savefig(f'{energy_type}_energy_by_groups.png', dpi=300)
