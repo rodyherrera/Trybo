@@ -68,4 +68,42 @@ class CentroSymmetricVisualizer:
         plt.legend()
         plt.tight_layout()
         plt.savefig(f'cs_distribution_timestep_{current_timestep}.png', dpi=300)
+    
+    def plot_defect_evolution(self, group=None):
+        timesteps, evolution = self.analyzer.get_defect_evolution(group)
         
+        # Plot defect percentage
+        plt.figure(figsize=(12, 8))
+        plt.plot(timesteps, evolution['defect_percent'], 'r-', label='Defects')
+        plt.plot(timesteps, evolution['perfect_percent'], 'b-', label='Perfect Crystal')
+        plt.plot(timesteps, evolution['stacking_fault_percent'], 'g-', label='Stacking Faults')
+         
+        plt.xlabel('Timestep')
+        plt.ylabel('Percentage of Atoms (%)')
+        title = 'Evolution of Crystal Structure'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        plt.title(title)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.legend()
+        plt.tight_layout()
+        plt.savefig('defect_evolution.png', dpi=300)
+
+        # Second plot for CS parameter values
+        plt.figure(figsize=(12, 8))
+        
+        plt.plot(timesteps, evolution['mean'], 'b-', label='Mean Centro-Symmetric Value')
+        plt.plot(timesteps, evolution['max'], 'r-', label='Max Centro-Symmetric Value')
+        
+        plt.xlabel('Timestep')
+        plt.ylabel('Centro-Symmetric Parameter')
+        title = 'Evolution of Centro-Symmetric Parameter'
+        if group is not None and group != 'all':
+            title += f' - Group: {group}'
+        plt.title(title)
+        plt.grid(True, linestyle='--', alpha=0.7)
+        plt.legend()
+        
+        plt.tight_layout()
+        
+        plt.savefig('cs_values_evolution.png', dpi=300)
