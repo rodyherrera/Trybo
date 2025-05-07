@@ -51,3 +51,22 @@ class VelocitySquaredAnalyzer:
         hot_spots_mask = velocity_squared >= hot_threshold
         hot_spots_data = data[hot_spots_mask]
         return hot_spots_data, hot_spots_mask
+    
+    def get_temperature_evolution(self, group=None):
+        timesteps = self.parser.get_timesteps()
+        all_data = self.parser.get_data()
+        average_temperature = []
+        max_temperature = []
+        min_temperature = []
+        for idx, data in enumerate(all_data):
+            if group is not None and group != 'all':
+                group_indices = self.get_atom_group_indices()[group]
+                current_data = data[group_indices]
+            else:
+                current_data = data
+            velocity_squared = current_data[:, 5]
+            temperature = self.velocity_to_temperature(velocity_squared)
+            average_temperature.append(np.mean(temperature))
+            max_temperature.append(np.max(temperature))
+            min_temperature.append(np.min(temperature))
+        return timesteps, average_temperature, max_temperature, min_temperature
