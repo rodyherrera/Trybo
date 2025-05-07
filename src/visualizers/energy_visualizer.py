@@ -301,3 +301,41 @@ class EnergyVisualizer:
 
         plt.tight_layout()
         plt.savefig(f'{energy_type}_energy_by_groups.png', dpi=300)
+    
+    def plot_energy_profile(self, timestep_idx=-1, axis='z', energy_type='total'):
+        timesteps = self.parser.get_timesteps()
+        
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        
+        current_timestep = timesteps[timestep_idx]
+        
+        if energy_type == 'kinetic':
+            title_prefix = 'Kinetic'
+            y_label = 'Kinetic Energy (eV)'
+            color = 'blue'
+        elif energy_type == 'potential':
+            title_prefix = 'Potential'
+            y_label = 'Potential Energy (eV)'
+            color = 'green'
+        else:
+            title_prefix = 'Total'
+            y_label = 'Total Energy (eV)'
+            color = 'red'
+
+            bin_centers, bin_energies = self.analyzer.calculate_energy_profile(timestep_idx, axis, energy_type=energy_type)
+        
+        plt.figure(figsize=(12, 8))
+        
+        plt.plot(bin_centers, bin_energies, f'{color}-o')
+        
+        plt.xlabel(f'Position on {axis.upper()} Axis (Å)')
+        plt.ylabel(y_label)
+        plt.title(f'{title_prefix} Energy Profile Along {axis.upper()} Axis (Timestep {current_timestep})')
+        plt.grid(True, linestyle='--', alpha=0.7)
+        
+        plt.tight_layout()
+        
+        plt.savefig(f'{energy_type}_energy_profile_{axis}_timestep_{current_timestep}.png', dpi=300)
+        
+        plt.show()
