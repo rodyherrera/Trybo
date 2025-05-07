@@ -285,3 +285,20 @@ class CentroSymmetricVisualizer:
         
         plt.tight_layout()
         plt.savefig(f'defect_by_groups_timestep_{current_timestep}.png', dpi=300)
+
+    def plot_defect_profile(self, timestep_idx=-1, axis='z'):
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        current_timestep = timesteps[timestep_idx]
+        bin_centers, defect_percent, average_centro_symmetric = self.analyzer.calculate_defect_profile(timestep_idx, axis)
+        fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)
+        ax1.plot(bin_centers, defect_percent, 'r-o')
+        ax1.set_ylabel('Defect Percentage (%)')
+        ax1.set_title(f'Defect Profile Along {axis.upper()} Axis (Timestep {current_timestep})')
+        ax1.grid(True, linestyle='--', alpha=0.7)
+        ax2.plot(bin_centers, average_centro_symmetric, 'b-o')
+        ax2.set_xlabel(f'Position on {axis.upper()} Axis (Å)')
+        ax2.set_ylabel('Average Centro Symmetric Value')
+        ax2.grid(True, linestyle='--', alpha=0.7)
+        plt.savefig(f'defect_profile_{axis}_timestep_{current_timestep}.png', dpi=300)
