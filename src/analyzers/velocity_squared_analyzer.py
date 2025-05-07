@@ -9,10 +9,8 @@ class VelocitySquaredAnalyzer:
         # Conversion factor for metal units
         self.metal_units_conversion = 25.464
 
-    def get_atom_group_indices(self):
-        if self._atom_groups is not None:
-            return self._atom_groups
-        data = self.parser.get_data()[0]
+    def get_atom_group_indices(self, timestep_idx):
+        data = self.parser.get_data()[timestep_idx]
         self._atom_groups = self.parser.get_atom_group_indices(data)
         return self._atom_groups
 
@@ -26,7 +24,7 @@ class VelocitySquaredAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         hot_threshold = np.percentile(velocity_squared, threshold_percentile)
@@ -42,7 +40,7 @@ class VelocitySquaredAnalyzer:
         min_temperature = []
         for idx, data in enumerate(all_data):
             if group is not None and group != 'all':
-                group_indices = self.get_atom_group_indices()[group]
+                group_indices = self.get_atom_group_indices(idx)[group]
                 current_data = data[group_indices]
             else:
                 current_data = data
@@ -59,7 +57,7 @@ class VelocitySquaredAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         temperature = self.velocity_to_temperature(velocity_squared)
@@ -78,7 +76,7 @@ class VelocitySquaredAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         velocity_squared = data[:, 5]
         temperature = self.velocity_to_temperature(velocity_squared)

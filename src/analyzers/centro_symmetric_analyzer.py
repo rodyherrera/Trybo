@@ -22,10 +22,10 @@ class CentroSymmetricAnalyzer:
             'defect': (8.0, float('inf'))
         }
     
-    def get_atom_group_indices(self):
+    def get_atom_group_indices(self, timestep_idx):
         if self._atom_groups is not None:
             return self._atom_groups
-        data = self.parser.get_data()[0]
+        data = self.parser.get_data()[timestep_idx]
         self._atom_groups = self.parser.get_atom_group_indices(data)
         return self._atom_groups
 
@@ -44,7 +44,7 @@ class CentroSymmetricAnalyzer:
         
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         
         centro_symmetric_values = data[:, 5]
@@ -78,7 +78,7 @@ class CentroSymmetricAnalyzer:
         }
         for idx, data in enumerate(all_data):
             if group is not None and group != 'all':
-                group_indices = self.get_atom_group_indices()[group]
+                group_indices = self.get_atom_group_indices(idx)[group]
                 current_data = data[group_indices]
             else:
                 current_data = data
@@ -100,7 +100,7 @@ class CentroSymmetricAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         centro_symmetric_values = data[:, 5]
         defect_mask = centro_symmetric_values >= threshold

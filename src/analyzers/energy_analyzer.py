@@ -7,11 +7,8 @@ class EnergyAnalyzer:
         self.parser = parser
         self._atom_groups = None
 
-    def get_atom_group_indices(self):
-        if self._atom_groups is not None:
-            return self._atom_groups
-
-        data = self.parser.get_data()[0]
+    def get_atom_group_indices(self, timestep_idx):
+        data = self.parser.get_data()[timestep_idx]
         self._atom_groups = self.parser.get_atom_group_indices(data)
         
         return self._atom_groups
@@ -22,7 +19,7 @@ class EnergyAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
@@ -48,7 +45,7 @@ class EnergyAnalyzer:
         sum_energy = []
         for idx, data in enumerate(all_data):
             if group is not None and group != 'all':
-                group_indices = self.get_atom_group_indices()[group]
+                group_indices = self.get_atom_group_indices(idx)[group]
                 current_data = data[group_indices]
             else:
                 current_data = data
@@ -65,7 +62,7 @@ class EnergyAnalyzer:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.get_atom_group_indices()[group]
+            group_indices = self.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]
@@ -80,7 +77,7 @@ class EnergyAnalyzer:
         high_energy_data = data[high_energy_mask]
         return high_energy_data, high_energy_mask
     
-    def get_energy_column_by_type(energy_type):
+    def get_energy_column_by_type(self, energy_type):
         types = {
             # c_ke_mobile
             'kinetic': 5,
@@ -98,7 +95,7 @@ class EnergyAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
-        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
+        atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         energy_col = self.get_energy_column_by_type(energy_type)
         energy_values = data[:, energy_col]

@@ -17,7 +17,7 @@ class VelocitySquaredVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         velocity_squared = data[:, 5]
         temperature = self.analyzer.velocity_to_temperature(velocity_squared)
@@ -44,7 +44,7 @@ class VelocitySquaredVisualizer:
         plt.savefig(f'temperature_distribution_timestep_{current_timestep}.png', dpi=300)
 
     def plot_temperature_evolution(self, group=None):
-        timesteps, average_temperature, max_temperature, min_temperature= self.analyzer.get_temperature_evolution(group)
+        timesteps, average_temperature, max_temperature, min_temperature = self.analyzer.get_temperature_evolution(group)
         plt.figure(figsize=(12, 8))
         
         plt.plot(timesteps, average_temperature, 'b-', label='Average Temperature')
@@ -68,7 +68,7 @@ class VelocitySquaredVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         velocity_squared = data[:, 5]
@@ -94,7 +94,7 @@ class VelocitySquaredVisualizer:
         current_timestep = timesteps[timestep_idx]
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             filtered_data = data[group_indices]
             hot_spots_data, hot_spots_mask = self.analyzer.get_hot_spots(timestep_idx, threshold_percentile, group)
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)

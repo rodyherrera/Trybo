@@ -74,7 +74,6 @@ def run_analysis(dump_folder, analysis_type=None, timestep=-1):
     print(f"All analyses completed in {elapsed_time:.2f} seconds")
     print(f"Analysis results saved to {output_dir}")
     
-    print(f"Error during analysis: {e}")
     os.chdir(original_dir)
 
 def run_cna_analysis(dump_folder, timestep=-1):

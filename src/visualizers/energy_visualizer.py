@@ -23,7 +23,7 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         if energy_type == 'kinetic':
             # c_ke_mobile
@@ -40,7 +40,7 @@ class EnergyVisualizer:
             energy_col = 7
             title_prefix = 'Total'
             x_label = 'Total Energy (eV)'
-        energy_values = data[:, energy_values]
+        energy_values = data[:, energy_col]
         plt.figure(figsize=(10, 8))
         sns.histplot(energy_values, kde=True, bins=50)
         plt.axvline(np.mean(energy_values), color='red', linestyle='--', label=f'Mean: {np.mean(energy_values):.3f} eV')
@@ -114,7 +114,7 @@ class EnergyVisualizer:
         current_timestep = timesteps[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
@@ -163,13 +163,13 @@ class EnergyVisualizer:
         data = self.parser.get_data()[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             filtered_data = data[group_indices]
             high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type, group)
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
         else:
             high_energy_data, high_energy_mask = self.analyzer.get_high_energy_regions(timestep_idx, threshold_percentile, energy_type)
-            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
+            all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(data)
         high_x, high_y, high_z = self.parser.get_atoms_spatial_coordinates(high_energy_data)
         if energy_type == 'kinetic':
             energy_col = 5
@@ -315,7 +315,8 @@ class EnergyVisualizer:
         
         plt.figure(figsize=(12, 8))
         
-        plt.plot(bin_centers, bin_energies, f'{color}-o')
+        # color!
+        plt.plot(bin_centers, bin_energies, marker='o')
         
         plt.xlabel(f'Position on {axis.upper()} Axis (Å)')
         plt.ylabel(y_label)
@@ -336,7 +337,7 @@ class EnergyVisualizer:
         current_timestep = timesteps[timestep_idx]
         
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         
         # Extract energy values

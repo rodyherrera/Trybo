@@ -29,7 +29,7 @@ class CentroSymmetricVisualizer:
         current_timestep = timesteps[timestep_idx]
 
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
 
         centro_symmetric_values = data[:, 5]
@@ -117,7 +117,7 @@ class CentroSymmetricVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             data = data[group_indices]
         
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
@@ -158,7 +158,7 @@ class CentroSymmetricVisualizer:
 
         # Get defect regions
         if group is not None and group != 'all':
-            group_indices = self.analyzer.get_atom_group_indices()[group]
+            group_indices = self.analyzer.get_atom_group_indices(timestep_idx)[group]
             filtered_data = data[group_indices]
             defect_data, defect_mask = self.analyzer.get_defect_regions(timestep_idx, threshold, group)
             all_x, all_y, all_z = self.parser.get_atoms_spatial_coordinates(filtered_data)
@@ -195,25 +195,25 @@ class CentroSymmetricVisualizer:
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
-        x, y, z = self.parser.get_atoms_spatial_coordinates()
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         cs_values = data[:, 5]
         
         fig, axs = plt.subplots(1, 3, figsize=(18, 6))
         
         bins = 50
-        hxy = axs[0].hexbin(x, y, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.cs_cmap)
+        hxy = axs[0].hexbin(x, y, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.centro_symmetric_cmap)
         axs[0].set_title('Centro-Symmetric Parameter - XY Plane (Top View)')
         axs[0].set_xlabel('X (Å)')
         axs[0].set_ylabel('Y (Å)')
         fig.colorbar(hxy, ax=axs[0], label='Average CS Value')
         
-        hxz = axs[1].hexbin(x, z, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.cs_cmap)
+        hxz = axs[1].hexbin(x, z, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.centro_symmetric_cmap)
         axs[1].set_title('Centro-Symmetric Parameter - XZ Plane (Side View)')
         axs[1].set_xlabel('X (Å)')
         axs[1].set_ylabel('Z (Å)')
         fig.colorbar(hxz, ax=axs[1], label='Average CS Value')
         
-        hyz = axs[2].hexbin(y, z, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.cs_cmap)
+        hyz = axs[2].hexbin(y, z, C=cs_values, gridsize=bins, reduce_C_function=np.mean, cmap=self.centro_symmetric_cmap)
         axs[2].set_title('Centro-Symmetric Parameter - YZ Plane (Front View)')
         axs[2].set_xlabel('Y (Å)')
         axs[2].set_ylabel('Z (Å)')
