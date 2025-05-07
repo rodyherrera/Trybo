@@ -1,126 +1,15 @@
 from core.base_parser import BaseParser
-import matplotlib.pyplot as plt
+from analyzers.energy_visualizer import EnergyAnalyzer
 import numpy as np
 
 class EnergyVisualizer:
     def __init__(self, parser: BaseParser):
         self.parser = parser
-        self.statistics = self.calculate_statistics()
+        self.analyzer = EnergyAnalyzer(parser)
 
-    def calculate_statistics(self):
-        headers = self.parser.get_headers()
-
-        ke_stats = []
-        pe_stats = []
-        total_stats = []
-
-        ke_idx = headers.index('c_ke_mobile')
-        pe_idx = headers.index('c_pe_mobile')
-        total_idx = headers.index('v_total_energy')
-        
-        for timestep_data in self.parser.get_data():
-            ke_values = timestep_data[:, ke_idx]
-            pe_values = timestep_data[:, pe_idx]
-            total_values = timestep_data[:, total_idx]
-
-            ke_stats.append({
-                'mean': np.mean(ke_values),
-                'min': np.min(ke_values),
-                'max': np.max(ke_values)
-            })
-
-            pe_stats.append({
-                'mean': np.mean(pe_values),
-                'min': np.min(pe_values),
-                'max': np.max(pe_values)
-            })
-            
-            total_stats.append({
-                'mean': np.mean(total_values),
-                'min': np.min(total_values),
-                'max': np.max(total_values)
-            })
-
-        statistics = {
-            'kinetic_energy': {
-                'average': [stats['mean'] for stats in ke_stats],
-                'min': [stats['min'] for stats in ke_stats],
-                'max': [stats['max'] for stats in ke_stats]
-            },
-            'potential_energy': {
-                'average': [stats['mean'] for stats in pe_stats],
-                'min': [stats['min'] for stats in pe_stats],
-                'max': [stats['max'] for stats in pe_stats]
-            },
-            'average': [stats['mean'] for stats in total_stats],
-            'min': [stats['min'] for stats in total_stats],
-            'max': [stats['max'] for stats in total_stats]
+        # Color maps for different energy types
+        self.energy_cmaps = {
+            'kinetic': 'plasma',
+            'potential': 'viridis', 
+            'total': 'turbo'
         }
-
-        return statistics
-
-    def plot_kinetic_energy(self):
-        timesteps = self.parser.get_timesteps()
-
-        plt.figure(figsize=(12, 6))
-        
-        plt.plot(timesteps, self.statistics['kinetic_energy']['average'], 'b--', label='Average')
-        plt.fill_between(
-            timesteps, 
-            self.statistics['kinetic_energy']['min'], 
-            self.statistics['kinetic_energy']['max'],
-            color='blue', 
-            alpha=0.2, 
-            label='Min-Max Range')
-        plt.ylabel('Kinetic Energy (eV)')
-        plt.title('Evolution of Kinetic Energy')
-        plt.grid(True, linestyle='--', alpha=0.7)
-        plt.legend()
-        plt.tight_layout()
-
-        plt.savefig('kinetic_energy_evolution.png', dpi=300)
-        plt.show()
-
-    def plot_potential_energy(self):
-        timesteps = self.parser.get_timesteps()
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(timesteps, self.statistics['potential_energy']['average'], 'r--', label='Average')
-        plt.fill_between(
-            timesteps, 
-            self.statistics['potential_energy']['min'],
-            self.statistics['potential_energy']['max'],
-            color='red',
-            alpha=0.2,
-            label='Min-Max Range')
-        plt.xlabel('Timestep')
-        plt.ylabel('Potential Energy (eV)')
-        plt.title('Evolution of Potential Energy')
-        plt.grid(True, linestyle='--', alpha=0.7)
-        plt.legend()
-        plt.tight_layout()
-        
-        plt.savefig('potential_energy_evolution.png', dpi=300)
-        plt.show()
-
-    def plot_total_energy(self):
-        timesteps = self.parser.get_timesteps()
-
-        plt.figure(figsize=(12, 6))
-        plt.plot(timesteps, self.statistics['average'], 'g--', label='Average')
-        plt.fill_between(
-            timesteps, 
-            self.statistics['min'], 
-            self.statistics['max'],
-            color='green',
-            alpha=0.2,
-            label='Min-Max Range')
-        plt.xlabel('Timestep')
-        plt.ylabel('Total Energy (eV)')
-        plt.title('Evolution of Total Energy')
-        plt.grid(True, linestyle='--', alpha=0.7)
-        plt.legend()
-        plt.tight_layout()        
-
-        plt.savefig('total_energy_evolution.png', dpi=300)
-        plt.show()
