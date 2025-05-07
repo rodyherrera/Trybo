@@ -30,7 +30,7 @@ class CentroSymmetricVisualizer:
         current_timestep = timesteps[timestep_idx]
 
         if group is not None and group != 'all':
-            group_indices = analyzer.get_atom_group_indices(self.parser, timestep_idx)[group]
+            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
 
         centro_symmetric_values = data[:, 5]
