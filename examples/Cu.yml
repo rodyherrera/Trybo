@@ -1,0 +1,173 @@
+simulation:
+    name: 'Copper Nanoparticle Wear Analysis'
+    description: 'Simulation of copper nanoparticle wear on a crystalline surface'
+    dump_frequency: 100
+    analysis_dump_frequency: 2000
+    timesteps: 5000
+    timesteps_size: 0.0001
+    output_directory: 'analysis_results'
+    restart_frequency: 50000
+    thermo_frequency: 1000
+
+system:
+    temperature: 300.0
+    pressure: 1.0
+    # [xmin, xmax, ymin, ymax, zmin, zmax]
+    box_dimensions: [0, 25, 0, 25, 0, 25]
+    material:
+        type: Cu
+        lattice: 3.615
+        potential: 'potentials/Cu_u3.eam'
+        mass: 63.546
+
+regions:
+    # [xmin, xmax, ymin, ymax, zmin, zmax]
+    lower_plane: [2.5, 22.5, 2.5, 22.5, 0, 2.5]
+    # [xmin, xmax, ymin, ymax, zmin, zmax]
+    upper_plane: [2.5, 22.5, 2.5, 22.5, 22.5, 25]
+    # [x, y, z, radio]
+    nanoparticle:  [12.5, 12.5, 12.5, 9.5]
+
+dynamics:
+    thermostat:
+        upper_plane:
+            temperature: 300.0
+            damping: 1.0
+            seed: 48279
+        lower_plane:
+            temperature: 300.0
+            damping: 1.0
+            seed: 12345
+        nanoparticle:
+            temperature: 300.0
+            damping: 10.0
+            seed: 23456
+    forces:
+        normal: -100.0
+        fz_min: 2.0
+    oscillation:
+        amplitude: 10.0
+        period: 25000
+        damping: 0.0
+
+run:
+    minimization:
+        # stopping tolerance for energy (unitless)
+        etol: 1.0e-6
+        # stopping tolerance for force (force units)
+        ftol: 1.0e-8
+    equilibration_steps: 20000
+    production_steps: 1000000
+
+neighbor:
+    delay: 2
+    every: 1
+    check: 'yes'
+    page: 1000000
+    one: 100000
+    binsize: 2.5
+
+thresholds:
+    deformation: 8.0
+    hotspot_factor: 4.0
+    cluster_cutoff: 3.0
+    coordination_cutoff: 3.3
+    cna_cutoff: 3.3
+    ptm_cutoff: 0.15
+
+oscillation:
+    amplitude: 10.0
+    period: 25000
+    damp_factor: 0.0
+
+cna:
+    enabled: true
+    plot_structure_distribution: true
+    plot_structure_evolution: true
+    plot_structure_heatmap: true
+    plot_structure_comparison: true
+    comparison_reference_timestep: 0
+
+coordination:
+    enabled: true
+    plot_coord_distribution: true
+    plot_coord_evolution: true
+    plot_coord_spatial: true
+    plot_atom_classification: true
+    plot_coord_ranges: true
+    plot_coord_comparison: true
+    comparison_reference_timestep: 0
+
+debris:
+    enabled: true
+    plot_cluster_evolution: true
+    plot_cluster_size_distribution: true
+    plot_3d_cluster_visualization: true
+    plot_2d_projections: true
+    plot_largest_clusters_info: true
+    min_cluster_size: 3
+
+hotspot:
+    enabled: true
+    plot_energy_distribution: true
+    plot_hotspot_evolution: true
+    plot_hotspot_spatial: true
+    plot_hotspot_clusters_3d: true
+    plot_hotspot_heatmap: true
+
+vonmises:
+    enabled: true
+    plot_stress_evolution: true
+    plot_stress_heatmaps: true
+    plot_stress_distribution: true
+    plot_stress_by_groups: true
+    plot_stress_3d: true
+    plot_stress_by_layer: true
+    percentile_threshold: 90
+    layer_axis: z
+
+centro_symmetric:
+    enabled: true
+    plot_centro_symmetric_distribution: true
+    plot_centro_symmetric_distribution_log: true
+    plot_defect_evolution: true
+    plot_defect_3d: true
+    plot_defect_regions: true
+    plot_centro_symmetric_heatmaps: true
+    plot_defect_by_groups: true
+    plot_defect_profile: true
+    profile_axis: z
+    group_analysis:
+        - nanoparticle 
+
+velocity_squared:
+    enabled: true
+    plot_temperature_distribution: true
+    plot_temperature_evolution: true
+    plot_temperature_3d: true
+    plot_hot_spots: true
+    plot_temperature_heatmaps: true
+    plot_temperature_by_groups: true
+    plot_temperature_gradient: true
+    gradient_axis: z
+    threshold_percentile: 95
+    group_analysis:
+        - nanoparticle
+
+energy:
+    enabled: true
+    plot_energy_distribution: true
+    plot_energy_evolution: true
+    plot_energy_3d: true
+    plot_high_energy_regions: true
+    plot_energy_heatmaps: true
+    plot_energy_by_groups: true
+    plot_energy_profile: true
+    plot_energy_comparison: true
+    energy_types:
+        - kinetic
+        - potential
+        - total
+    profile_axis: z
+    group_analysis:
+        - nanoparticle

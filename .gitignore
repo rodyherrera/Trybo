@@ -6,6 +6,7 @@ lmp
 lammps/
 dumps/
 *.binary
+src/templates/builds
 
 __pycache__/*
 *.cpython*
