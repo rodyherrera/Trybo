@@ -1,4 +1,5 @@
 from core.yaml_config import YamlConfig, BUILDS_DIR
+from core.analyzer import Analyzer
 import sys
 
 def main():
