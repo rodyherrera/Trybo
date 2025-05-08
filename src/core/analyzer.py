@@ -137,3 +137,19 @@ class Analyzer:
         
         parser = parsers.CommonNeighborAnalysisParser(cna_file)
         visualizer = visualizers.CommonNeighborAnalysisVisualizer(parser)
+
+        self.logger.info('Generating CNA distribution plot')
+        visualizer.plot_structure_distribution(timestep)
+
+        self.logger.info('Generating CNA evolution plot')
+        visualizer.plot_structure_evolution()
+
+        self.logger.info('Generating CNA spatial distribution heatmap')
+        visualizer.plot_structure_heatmap(timestep)
+
+        self.logger.info('Generating CNA structure comparison')
+        visualizer.plot_structure_comparison(0, timestep)
+
+        return True
+
+    
