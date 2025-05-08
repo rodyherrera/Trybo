@@ -152,4 +152,34 @@ class Analyzer:
 
         return True
 
+    def run_coordination_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing Coordination analysis')
+        coordination_file = os.path.join(dump_folder, 'coordination.dump')
+
+        if not os.path.exists(coord_file):
+            self.logger.error(f'Coordination file not found: {coord_file}')
+            return False
+        
+        parser = parsers.CoordinationParser(coord_file)
+        visualizer = parsers.CoordinationVisualizer(parser)
+
+        self.logger.info('Generating coordination distribution plot')
+        visualizer.plot_coord_distribution(timestep)
+
+        self.logger.info('Generating coordination evolution plot')
+        visualizer.plot_coord_evolution()
+
+        self.logger.info('Generating coordination spatial distribution')
+        visualizer.plot_coord_spatial(timestep)
+
+        self.logger.info('Generating atom classification by coordination')
+        visualizer.plot_atom_classification(timestep)
+
+        self.logger.info('Generating coordiantion range distribution')
+        visualizer.plot_coord_ranges(timestep)
+
+        self.logger.info('Generating coordination comparison')
+        visualizer.plot_coord_comparison(0, timestep)
+
+        return True
     
