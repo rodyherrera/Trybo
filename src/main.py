@@ -27,18 +27,30 @@ def main():
     # Now get the simulation file path (after render_template has set output_filename)
     simulation_file = yaml_config.get_simulation_file_path()
     
-    # Create simulation runner and analyzer
+    # Create simulation runner
     simulation_runner = SimulationRunner(simulation_file)
-    analyzer = Analyzer(yaml_file, yaml_config.output_directory)
+    
+    # Create analyzer with the YAML configuration
+    analyzer = Analyzer(yaml_config=yaml_config)
     
     # Execute simulation
     if simulation_runner.execute():
         print('Simulation completed successfully.')
-        analyzer.run_analysis()
-        sys.exit(0)
+        
+        # Run analysis with the shared configuration
+        if analyzer.run_analysis():
+            print('Analysis completed successfully.')
+        else:
+            print('Analysis failed.')
+            sys.exit(1)
     else:
         print('Simulation failed.')
         sys.exit(1)
+        
+    # Show the analysis output location
+    analysis_path = yaml_config.get_analysis_output_path()
+    print(f'\nResults available at: {analysis_path}')
+    sys.exit(0)
 
 if __name__ == '__main__':
     main()

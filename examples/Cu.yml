@@ -5,7 +5,6 @@ simulation:
     analysis_dump_frequency: 2000
     timesteps: 5000
     timesteps_size: 0.0001
-    output_directory: 'analysis_results'
     restart_frequency: 50000
     thermo_frequency: 1000
 

@@ -10,16 +10,14 @@ import logging
 import parsers
 
 class Analyzer:
-    def __init__(self, config_path: str = None, dump_folder: str = None):
+    def __init__(self, yaml_config=None, dump_folder=None):
         self.logger = logging.getLogger('Analyzer')
         self._setup_logging()
 
-        # Initialize configuration
-        self.config = {}
-        if config_path:
-            self.load_config(config_path)
+        self.yaml_config = yaml_config
+        self.config = yaml_config.config
+        self.logger.info("Using configuration from YamlConfig instance")
         
-        # Override dump folder if provided
         if dump_folder:
             self.set_dump_folder(dump_folder)
         
@@ -44,40 +42,32 @@ class Analyzer:
         self.logger.addHandler(handler)
         self.logger.setLevel(logging.INFO)
     
-    def load_config(self, config_path: str) -> bool:
-        try:
-            with open(config_path, 'r') as file:
-                self.config = yaml.safe_load(file)
-                self.logger.info(f'Configuration loaded from {config_path}')
-                return True
-        except Exception as e:
-            self.logger.error(f'Error loading configuration from {config_path}: {str(e)}')
-            return False
-    
     def set_dump_folder(self, dump_folder: str):
         if not os.path.exists(dump_folder) or not os.path.isdir(dump_folder):
-            set.logger.error(f'Dump folder does not exist or is not a directory: {dump_folder}')
+            self.logger.error(f'Dump folder does not exist or is not a directory: {dump_folder}')
             return False
+        
         if 'analysis' not in self.config:
             self.config['analysis'] = {}
+            
         self.config['analysis']['dump_folder'] = dump_folder
         self.logger.info(f'Dump folder set to: {dump_folder}')
         return True
     
+    
+ 
     def set_output_folder(self, output_folder: str = None) -> str:
-        if not output_folder:
-            # Use dump folder with "analysis_results" subfolder if not specified
-            dump_folder = self.config.get('analysis', {}).get('dump_folder')
-            if not dump_folder:
-                self.logger.error('No dump folder specified in configuration')
-                return None
-            output_folder = os.path.join(dump_folder, 'anaysis_results')
+        output_folder = self.yaml_config.analysis_output_path
+        self.logger.info(f'Using YamlConfig analysis output path: {output_folder}')
+
         # Create the output directory if it doesn't exist
         os.makedirs(output_folder, exist_ok=True)
+        
         if 'analysis' not in self.config:
             self.config['analysis'] = {}
+            
         self.config['analysis']['output_folder'] = output_folder
-        self.logger.info(f'Output folder set to: {output_folder}')
+        self.logger.info(f'Analysis output folder set to: {output_folder}')
         return output_folder
     
     def run_analysis(self, analysis_type: str = None, timestep: int = -1) -> bool:

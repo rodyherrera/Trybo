@@ -10,3 +10,5 @@ src/templates/builds
 
 __pycache__/*
 *.cpython*
+
+analysis_results/

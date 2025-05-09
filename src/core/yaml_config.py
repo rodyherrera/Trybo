@@ -2,6 +2,7 @@ from jinja2 import Environment, FileSystemLoader
 import os
 import sys
 import yaml
+import datetime
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, '..', 'templates')
@@ -14,6 +15,7 @@ class YamlConfig:
         self.output_directory = output_directory
         self.config = None
         self.output_filename = None
+        self.analysis_output_path = None
         self.ensure_output_directories()
 
     def ensure_output_directories(self):
@@ -55,17 +57,65 @@ class YamlConfig:
             print(f'Error loading YAML file {self.yaml_file}: {e}')
             return False
 
+    def create_analysis_output_path(self):
+        """
+        Create the analysis output path with the structure:
+        /project_root/analysis_results/[project_name]/[timestamp]/
+        Returns the created path.
+        """
+        # Get project name from filename (without extension)
+        if not self.output_filename:
+            self.get_output_filename()
+            
+        project_name = os.path.splitext(self.output_filename)[0]
+        
+        # Generate timestamp in ISO format
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        
+        # Get project root directory
+        project_root = os.path.dirname(os.path.dirname(SCRIPT_DIR))
+        
+        # Create full path structure
+        analysis_path = os.path.join(
+            project_root, 
+            'analysis_results', 
+            project_name,
+            timestamp
+        )
+        
+        # Create the directory structure
+        os.makedirs(analysis_path, exist_ok=True)
+        
+        # Store for later use
+        self.analysis_output_path = analysis_path
+        
+        return analysis_path
+
     def render_template(self):
         if not self.config:
             print('No configuration loaded. Call load_config() first.')
             return False
         
+        # Get the output filename first
         self.get_output_filename()
 
+        # Create analysis output path
+        analysis_path = self.create_analysis_output_path()
+        
+        if 'simulation' not in self.config:
+            self.config['simulation'] = {}
+            
+        self.config['simulation']['output_directory'] = analysis_path
+        print(f'Set output directory to: {analysis_path}')
+        
+        self.config['analysis'] = self.config.get('analysis', {})
+        self.config['analysis']['dump_folder'] = analysis_path
+        self.config['analysis']['output_folder'] = analysis_path
+        
         try:
             # Jinja2 Environment
             template_directory = os.path.dirname(TEMPLATE_FILE)
-            template_name= os.path.basename(TEMPLATE_FILE)
+            template_name = os.path.basename(TEMPLATE_FILE)
             environ = Environment(
                 loader=FileSystemLoader(template_directory),
                 trim_blocks=True,
@@ -78,6 +128,13 @@ class YamlConfig:
             with open(output_path, 'w') as file:
                 file.write(output)
             print(f'LAMMPS file successfully generated: {output_path}')
+            
+            # Also save the configuration to the analysis directory for reference
+            config_backup_path = os.path.join(analysis_path, 'simulation_config.yml')
+            with open(config_backup_path, 'w') as file:
+                yaml.dump(self.config, file, default_flow_style=False)
+            print(f'Configuration saved to: {config_backup_path}')
+            
             return True
         except Exception as e:
             print(f'Error rendering template: {str(e)}')
@@ -99,3 +156,8 @@ class YamlConfig:
             raise ValueError(f'Output path {simulation_file_path} is outside the specified output directory')
         
         return simulation_file_path
+    
+    def get_analysis_output_path(self):
+        if not self.analysis_output_path:
+            self.create_analysis_output_path()
+        return self.analysis_output_path
