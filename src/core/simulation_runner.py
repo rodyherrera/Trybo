@@ -61,3 +61,36 @@ class SimulationRunner:
         except Exception as e:
             self.logger.error(f'Error running build script: {str(e)}')
             return False
+
+    def detect_cpu_info(self):
+        self.total_processors = os.cpu_count()
+        if os.path.isfile('/proc/cpuinfo'):
+            # Linux-specific approach
+            try:
+                result = subprocess.run(
+                    "grep 'cpu cores' /proc/cpuinfo | head -1 | awk '{print $4}'", 
+                    shell=True, 
+                    stdout=subprocess.PIPE, 
+                    text=True, 
+                    check=True
+                )
+                physical_cores = result.stdout.strip()
+                if physical_cores:
+                    self.physical_cores = int(physical_cores)
+                else:
+                    self.physical_cores = self.total_processors // 2
+            except:
+                self.physical_cores = self.total_processors // 2
+        else:
+            # Estimation for other OS
+            self.physical_cores = self.total_processors // 2
+        
+        # Single-Core CPUs
+        if self.physical_cores < 1:
+            self.physical_cores = 1
+        
+        # Calculate processors to use (n-1 to leave one for system)
+        self.use_processors = max(1, self.physical_cores - 1)
+        self.logger.info(f'System has {self.total_processors} logical processors ({self.physical_cores} physical cores)')
+        self.logger.info(f'Using {self.use_processors} processors for simulation')
+        
