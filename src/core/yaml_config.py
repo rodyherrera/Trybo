@@ -82,3 +82,11 @@ class YamlConfig:
         except Exception as e:
             print(f'Error rendering template: {str(e)}')
             return False
+    
+    def get_output_filepath(self) -> str:
+        # Combine directory and filename to get absolute path
+        output_filepath = os.path.abspath(os.path.join(self.output_directory, self.output_filename))
+        # Verify the path is within the intended output directory (security check)
+        if not output_filepath.startswith(os.path.abspath(self.output_directory)):
+            raise ValueError(f'Output path {output_filepath} is outside the specified output directory')
+        return output_filepath
