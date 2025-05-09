@@ -108,5 +108,18 @@ class SimulationRunner:
         result = subprocess.run(cmd, check=False)
         if result.returncode == 0:
             self.logger.info('Simulation completed successfully!')
+
+    def check_simulation_file(self) -> bool:
+         if os.path.isfile(self.simulation_file):
+            self.logger.info(f'Simulation file found at {self.simulation_file}')
             return True
+        self.logger.error(f'Error: Input file not found at {self.simulation_file}')
+        return False
         
+    def execute(self) -> bool:
+        # Check LAMMPS executable and simulation file
+        if not self.check_lammps_executable() or not self.check_simulation_file():
+            return False
+        
+        self.detect_cpu_info()
+        return self.run_simulation()

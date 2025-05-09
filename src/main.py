@@ -1,5 +1,6 @@
 from core.yaml_config import YamlConfig, BUILDS_DIR
 from core.analyzer import Analyzer
+from core.simulation_runner import SimulationRunner
 import sys
 
 def main():
