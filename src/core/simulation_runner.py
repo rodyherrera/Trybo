@@ -32,3 +32,9 @@ class SimulationRunner:
         current_date = datetime.datetime.now().strftime('%B %d %Y')
         self.logger.info(f'Trybo ({current_date} - Development - 1.0)')
         self.logger.info('Your suite of atomic-level analyses.')
+    
+    def _setup_logging(self, log_level: int):
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('%(message)s')
+        handler.setFormatter(formatter)
+        self.logger.addHandler(handler)
