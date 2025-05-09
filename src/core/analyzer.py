@@ -24,7 +24,14 @@ class Analyzer:
             self.set_dump_folder(dump_folder)
         
         self.analysis_registry = {
-            'cna': self.run_cna_analysis
+            'cna': self.run_cna_analysis,
+            'coordination': self.run_coordination_analysis,
+            'debris': self.run_debris_analysis,
+            'hotspot': self.run_hotspot_analysis,
+            'vonmises': self.run_vonmises_analysis,
+            'centro_symmetric': self.run_centro_symmetric_analysis,
+            'velocity_squared': self.run_velocity_squared_analysis,
+            'energy': self.run_energy_analysis
         }
     
     def _setup_logging(self):
@@ -183,3 +190,227 @@ class Analyzer:
 
         return True
     
+    def run_debris_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing Debris analysis')
+        debris_file = os.path.join(dump_folder, 'debris_clusters.dump')
+
+        if not os.path.exists(debris_file):
+            self.logger.error(f'Debris file not found: {debris_file}')
+            return False
+        
+        parser = parsers.DebrisParser(debris_file)
+        visualizer = visualizers.DebrisVisualizer(parser)
+
+        self.logger.info('Generating cluster evolution plot')
+        visualizer.plot_cluster_evolution()
+        
+        self.logger.info('Generating cluster size distribution')
+        visualizer.plot_cluster_size_distribution(timestep, min_size=2)
+        
+        self.logger.info('Generating 3D cluster visualization')
+        visualizer.plot_3d_cluster_visualization(timestep, min_size=3)
+        
+        self.logger.info('Generating 2D projections of clusters')
+        visualizer.plot_2d_projections(timestep, min_size=3)
+        
+        self.logger.info('Generating largest clusters information table')
+        visualizer.plot_largest_clusters_info(timestep)
+        
+        return True
+
+    def run_hotspot_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing Hotspot analysis')
+        hotspot_file = os.path.join(dump_folder, 'hotspot.dump')
+
+        if not os.path.exists(hotspot_file):
+            self.logger.error(f'Hotspot file not found: {hotspot_file}')
+            return False
+
+        parser = parsers.HotspotParser(hotspot_file)
+        visualizer = visualizers.HotspotVisualizer(parser)
+
+        self.logger.info('Generating energy distribution plot')
+        visualizer.plot_energy_distribution(timestep)
+        
+        self.logger.info('Generating hotspot evolution plot')
+        visualizer.plot_hotspot_evolution()
+        
+        self.logger.info('Generating hotspot spatial distribution')
+        visualizer.plot_hotspot_spatial(timestep)
+        
+        self.logger.info('Generating 3D hotspot clusters')
+        visualizer.plot_hotspot_clusters_3d(timestep)
+        
+        self.logger.info('Generating hotspot heatmap')
+        visualizer.plot_hotspot_heatmap(timestep)
+        
+        return True
+
+    def run_vonmises_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing von Mises analysis')
+        vonmises_file = os.path.join(dump_folder, 'vonmises.dump')
+
+        if not os.path.exists(vonmises_file):
+            self.logger.error(f'Von Mises file not found: {vonmises_file}')
+            return False
+        
+        parser = parsers.VonmisesParser(vonmises_file)
+        visualizer = visualizers.VonmisesVisualizer(parser)
+
+        self.logger.info('Generating stress evolution plot')
+        visualizer.plot_stress_evolution()
+        
+        self.logger.info('Generating stress heatmaps')
+        visualizer.plot_stress_heatmaps(timestep)
+        
+        self.logger.info('Generating stress distribution')
+        visualizer.plot_stress_distribution(timestep)
+        
+        self.logger.info('Generating stress by groups')
+        visualizer.plot_stress_by_groups()
+        
+        self.logger.info('Generating 3D stress visualization')
+        visualizer.plot_stress_3d(timestep)
+        visualizer.plot_stress_3d(timestep, group='nanoparticle', percentile_threshold=90)
+        
+        self.logger.info('Generating stress by layer')
+        visualizer.plot_stress_by_layer(timestep, axis='z')
+
+        return True
+
+    def run_centro_symmetric_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing Centro-Symmetric analysis')
+        centro_symmetric_file = os.path.join(dump_folder, 'center_symmetric.dump')
+
+        if not os.path.exists(centro_symmetric_file):
+            self.logger.error(f'Centro-Symmetric file not found: {centro_symmetric_file}')
+            return False
+        
+        parser = parsers.CentroSymmetricParser(centro_symmetric_file)
+        visualizer = visualizers.CentroSymmetricVisualizer(parser)
+
+        self.logger.info('Generating Centro-Symmetric parameter distribution')
+        visualizer.plot_centro_symmetric_distribution(timestep)
+        visualizer.plot_centro_symmetric_distribution(timestep, log_scale=True)
+
+        timesteps = parser.get_timesteps()
+        if len(timesteps) > 1:
+            self.logger.info('Generating defect evolution plots')
+            visualizer.plot_defect_evolution()
+            
+            self.logger.info('Generating nanoparticle defect evolution')
+            visualizer.plot_defect_evolution(group='nanoparticle')
+
+        self.logger.info('Generating 3D visualization of crystal structure')
+        visualizer.plot_defect_3d(timestep)
+
+        self.logger.info('Generating visualization of defect regions')
+        visualizer.plot_defect_regions(timestep)
+
+        self.logger.info('Generating centro-symmetric heat maps')
+        visualizer.plot_centro_symmetric_heatmaps(timestep)
+        
+        self.logger.info('Comparing defects between groups')
+        visualizer.plot_defect_by_groups(timestep)
+        
+        self.logger.info('Generating defect profile along Z-axis')
+        visualizer.plot_defect_profile(timestep, axis='z')
+        
+        self.logger.info('Generating nanoparticle-specific analysis')
+        visualizer.plot_centro_symmetric_distribution(timestep, group='nanoparticle')
+        visualizer.plot_defect_regions(timestep, group='nanoparticle')
+    
+        return True
+
+    def run_velocity_squared_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+        self.logger.info('Initializing Velocity Squared analysis')
+        velocity_squared_file = os.path.join(dump_folder, 'velocity_squared.dump')
+
+        if not os.path.exists(velocity_squared_file):
+            self.logger.error(f'Velocity Squared file not found: {velocity_squared_file}')
+            return False
+        
+        parser = parsers.VelocitySquaredParser(velocity_squared_file)
+        visualizer = visualizers.VelocitySquaredVisualizer(parser)
+
+        self.logger.info('Generating temperature distribution plot')
+        visualizer.plot_temperature_distribution(timestep)
+        
+        timesteps = parser.get_timesteps()
+        if len(timesteps) > 1:
+            self.logger.info('Generating temperature evolution plots')
+            visualizer.plot_temperature_evolution()
+        
+        self.logger.info('Generating 3D visualization of temperature')
+        visualizer.plot_temperature_3d(timestep)
+        
+        self.logger.info('Generating visualization of hot spots')
+        visualizer.plot_hot_spots(timestep, threshold_percentile=95)
+        
+        self.logger.info('Generating temperature heat maps')
+        visualizer.plot_temperature_heatmaps(timestep)
+        
+        if len(timesteps) > 1:
+            self.logger.info('Generating temperature comparison between groups')
+            visualizer.plot_temperature_by_groups()
+        
+        self.logger.info('Generating temperature gradient along Z-axis')
+        visualizer.plot_temperature_gradient(timestep, axis='z')
+        
+        self.logger.info('Generating nanoparticle-specific analysis')
+        visualizer.plot_temperature_distribution(timestep, group='nanoparticle')
+        visualizer.plot_hot_spots(timestep, threshold_percentile=95, group='nanoparticle')
+        
+        return True
+
+    def run_energy_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+         self.logger.info('Initializing Energy analysis')
+        energy_file = os.path.join(dump_folder, 'energy.dump')
+        
+        if not os.path.exists(energy_file):
+            self.logger.error(f'Energy file not found: {energy_file}')
+            return False
+            
+        parser = parsers.EnergyParser(energy_file)
+        visualizer = visualizers.EnergyVisualizer(parser)
+        
+        self.logger.info('Generating energy distribution plots')
+        visualizer.plot_energy_distribution(timestep, energy_type='kinetic')
+        visualizer.plot_energy_distribution(timestep, energy_type='potential')
+        visualizer.plot_energy_distribution(timestep, energy_type='total')
+        
+        timesteps = parser.get_timesteps()
+        if len(timesteps) > 1:
+            self.logger.info('Generating energy evolution plots')
+            visualizer.plot_energy_evolution(energy_type='kinetic')
+            visualizer.plot_energy_evolution(energy_type='potential')
+            visualizer.plot_energy_evolution(energy_type='total')
+
+            self.logger.info('Generating energy comparison between groups')
+            visualizer.plot_energy_by_groups(energy_type='total')
+    
+
+        self.logger.info('Generating 3D energy visualizations')
+        visualizer.plot_energy_3d(timestep, energy_type='kinetic')
+        visualizer.plot_energy_3d(timestep, energy_type='potential')
+        visualizer.plot_energy_3d(timestep, energy_type='total')
+        
+        self.logger.info('Generating high energy region visualizations')
+        visualizer.plot_high_energy_regions(timestep, energy_type='kinetic')
+        visualizer.plot_high_energy_regions(timestep, energy_type='potential')
+        visualizer.plot_high_energy_regions(timestep, energy_type='total')
+        
+        self.logger.info('Generating energy heat maps')
+        visualizer.plot_energy_heatmaps(timestep, energy_type='total')
+
+        self.logger.info('Generating energy profile along Z-axis')
+        visualizer.plot_energy_profile(timestep, axis='z')
+        
+        self.logger.info('Generating energy type comparison')
+        visualizer.plot_energy_comparison(timestep)
+        
+        self.logger.info('Generating nanoparticle-specific analysis')
+        visualizer.plot_energy_distribution(timestep, group='nanoparticle')
+        visualizer.plot_high_energy_regions(timestep, energy_type='total', group='nanoparticle')
+
+        return True
