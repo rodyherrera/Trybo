@@ -38,3 +38,26 @@ class SimulationRunner:
         formatter = logging.Formatter('%(message)s')
         handler.setFormatter(formatter)
         self.logger.addHandler(handler)
+        self.logger.setLevel(log_level)
+    
+    def check_lammps_executable(self) -> bool:
+        if os.path.isfile(self.lammps_executable):
+            self.logger.info(f'LAMMPS executable found at {self.lammps_executable}')
+            return True
+        
+        self.logger.warning(f'LAMMPS executable not found at {self.lammps_executable}')
+        self.logger.info('Building LAMMPS automatically...')
+        
+        try:
+            build_result = subprocess.run(['bash', self.build_script], check=False)
+            
+            if build_result.returncode == 0 and os.path.isfile(self.lammps_executable):
+                self.logger.info('LAMMPS built successfully. Continuing...')
+                return True
+            else:
+                self.logger.error('LAMMPS build failed. Please check the build output.')
+                return False
+                
+        except Exception as e:
+            self.logger.error(f'Error running build script: {str(e)}')
+            return False
