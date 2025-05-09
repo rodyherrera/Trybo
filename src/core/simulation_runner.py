@@ -110,12 +110,12 @@ class SimulationRunner:
             self.logger.info('Simulation completed successfully!')
 
     def check_simulation_file(self) -> bool:
-         if os.path.isfile(self.simulation_file):
+        if os.path.isfile(self.simulation_file):
             self.logger.info(f'Simulation file found at {self.simulation_file}')
             return True
         self.logger.error(f'Error: Input file not found at {self.simulation_file}')
         return False
-        
+
     def execute(self) -> bool:
         # Check LAMMPS executable and simulation file
         if not self.check_lammps_executable() or not self.check_simulation_file():

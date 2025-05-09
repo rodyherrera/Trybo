@@ -83,10 +83,19 @@ class YamlConfig:
             print(f'Error rendering template: {str(e)}')
             return False
     
-    def get_output_filepath(self) -> str:
+    def get_simulation_file_path(self) -> str:
+        # Make sure the output_filename is set
+        if not self.output_filename:
+            self.get_output_filename()
+            
+        if not self.output_filename:
+            raise ValueError('Failed to generate an output filename. Make sure to load the config first.')
+        
         # Combine directory and filename to get absolute path
-        output_filepath = os.path.abspath(os.path.join(self.output_directory, self.output_filename))
+        simulation_file_path = os.path.abspath(os.path.join(self.output_directory, self.output_filename))
+        
         # Verify the path is within the intended output directory (security check)
-        if not output_filepath.startswith(os.path.abspath(self.output_directory)):
-            raise ValueError(f'Output path {output_filepath} is outside the specified output directory')
-        return output_filepath
+        if not simulation_file_path.startswith(os.path.abspath(self.output_directory)):
+            raise ValueError(f'Output path {simulation_file_path} is outside the specified output directory')
+        
+        return simulation_file_path

@@ -82,7 +82,6 @@ class Analyzer:
     
     def run_analysis(self, analysis_type: str = None, timestep: int = -1) -> bool:
         start_time = time.time()
-
         
         # Get dump folder from config
         dump_folder = self.config.get('analysis', {}).get('dump_folder')
@@ -364,7 +363,7 @@ class Analyzer:
         return True
 
     def run_energy_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
-         self.logger.info('Initializing Energy analysis')
+        self.logger.info('Initializing Energy analysis')
         energy_file = os.path.join(dump_folder, 'energy.dump')
         
         if not os.path.exists(energy_file):

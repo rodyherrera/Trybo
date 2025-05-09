@@ -7,7 +7,7 @@ timestep {{ simulation.timesteps_size }}
 
 # Output directory setup
 variable output_directory string "{{ simulation.output_directory }}"
-shell mkdir -p ${output_directory}
+shell mkdir ${output_directory}
 
 # Frequency used for trajectory.lammpstrj and nanoparticle_trajectory.lammpstrj
 variable dump_frequency equal {{ simulation.dump_frequency }}
