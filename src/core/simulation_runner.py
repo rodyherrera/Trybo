@@ -93,4 +93,20 @@ class SimulationRunner:
         self.use_processors = max(1, self.physical_cores - 1)
         self.logger.info(f'System has {self.total_processors} logical processors ({self.physical_cores} physical cores)')
         self.logger.info(f'Using {self.use_processors} processors for simulation')
+    
+    def run_simulation(self) -> bool:
+        self.logger.info('Starting simulation...')
+
+        cmd = [
+            'mpirun', 
+            '--use-hwthread-cpus', 
+            '-np', str(self.use_processors), 
+            self.lammps_executable, 
+            '-in', self.simulation_file
+        ]
+        self.logger.debug(f'Running command: {" ".join(cmd)}')
+        result = subprocess.run(cmd, check=False)
+        if result.returncode == 0:
+            self.logger.info('Simulation completed successfully!')
+            return True
         
