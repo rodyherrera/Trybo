@@ -16,10 +16,7 @@ variable dump_frequency equal {{ simulation.dump_frequency }}
 # tempereature_related_dump, energy_dump
 variable analysis_related_dump_frequency equal {{ simulation.analysis_dump_frequency }}
 
-# LAMMPS build with GPU cmake option
-package gpu 1 neigh yes split 1.0 gpuID 0 tpa 64
-
-suffix gpu
+package gpu 1
 
 # Simulation box 
 lattice fcc {{ system.material.lattice }}
@@ -53,6 +50,13 @@ pair_coeff * * {{ system.material.potential }}
 
 neigh_modify delay {{ neighbor.delay }} every {{ neighbor.every }} check {{ neighbor.check }} page {{ neighbor.page }} one {{ neighbor.one }} binsize {{ neighbor.binsize }}
 delete_atoms overlap 0.01 nanoparticle_group upper_plane_group
+
+# Ignore atoms lost during simulation
+thermo_modify lost ignore
+
+# Energy minimization (to relax initial structure)
+min_style cg
+minimize {{ run.minimization.etol }} {{ run.minimization.ftol }} 5000 50000
 
 # Save nanoparticle IDs and initial positions
 dump nanoparticle_init nanoparticle_group custom 1 ${output_directory}/nanoparticle_init.txt id type x y z
@@ -95,9 +99,69 @@ fix nve_mobile mobile_group nve
 # A soft thermostat for the nanoparticle prevents localized overheating
 fix thermo_nano nanoparticle_group langevin {{ dynamics.thermostat.nanoparticle.temperature }} {{ dynamics.thermostat.nanoparticle.temperature }} {{ dynamics.thermostat.nanoparticle.damping }} {{ dynamics.thermostat.nanoparticle.seed }}
 
-# Normal force to upper plane
-variable Fz_normal equal {{ dynamics.forces.normal }}
-fix add_normal_force upper_plane_group addforce 0.0 0.0 ${Fz_normal}
+# Initial position tracking for upper plane
+variable initial_z_upper equal xcm(upper_plane_group,z)
+variable current_z_upper equal ${initial_z_upper}
+
+# Parameters for approach - adjust for precision vs. speed
+variable approach_rate equal 0.002
+variable displace_increment equal ${approach_rate}
+
+# Setup for force monitoring only
+compute normal_force_nanoparticle_upper_plane nanoparticle_group group/group upper_plane_group
+variable fz equal c_normal_force_nanoparticle_upper_plane[3]
+variable prev_fz equal 0.0
+variable fz_change equal 0.0
+
+# Debug output
+fix debug_approach all print 100 "Step $(step): Fz = ${fz} eV/A, Fz_change = ${fz_change}, Z = ${current_z_upper}"
+
+run 0
+variable prev_fz equal ${fz}
+
+# Approach loop using displace/atoms with automatic contact detection based on force rate of change
+label loop_approach
+  # Displace the upper plane atoms down by the increment
+  displace_atoms upper_plane_group move 0.0 0.0 -${displace_increment}
+  
+  # Update current position
+  variable current_z_upper equal xcm(upper_plane_group,z)
+  
+  # Run a short simulation to let the system adjust
+  run 100
+  
+  # Calculate change in force for contact detection
+  variable fz_change equal abs((${fz} - ${prev_fz})/${displace_increment})
+  variable prev_fz equal ${fz}
+  
+  # Detect contact based on significant change in force rate
+  # When the force changes rapidly, contact is happening
+  # Start with a small value and adjust if needed
+  variable contact_detected equal ${fz_change} > 0.2
+  
+  # Alternative: use a combined criterion
+  # variable contact_detected equal (${fz_change} > 0.2) || (abs(${fz}) > 0.5)
+  
+  # Continue loop if contact not detected
+  if ${contact_detected}==0 then "jump SELF loop_approach"
+
+# Clean up
+unfix debug_approach
+
+# Record contact force
+variable fz_contact equal ${fz}
+variable normal_load equal ${fz_contact}
+print "Contact Detected: Fz = ${fz_contact} eV/Angstrom at Z position = ${current_z_upper}, Fz change = ${fz_change}"
+fix contact_out all print 1 "${fz_contact}" file ${output_directory}/contact_force.txt screen no
+
+# Apply constant normal force using addforce
+fix normal_load upper_plane_group addforce 0.0 0.0 -${normal_load}
+
+# Continue with your oscillatory movement for friction study
+fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NULL NULL NULL
+
+variable fz_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[3]
+variable fx_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[1]
 
 # Oscillatory motion (fretting) for the upper plane
 variable amplitude equal {{ dynamics.oscillation.amplitude }}
@@ -115,19 +179,11 @@ fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NUL
 compute z_upper_plane upper_plane_group reduce ave z
 variable z_upper_plane equal c_z_upper_plane
 
-# Force measurement between nanoparticle and upper_plane
-compute normal_force_nanoparticle_upper_plane nanoparticle_group group/group upper_plane_group
-variable fz_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[3]
-
-# Friction force measurement (x component)
-variable fx_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[1]
-
-# Calculate coefficient of friction
-variable fz_min equal {{ dynamics.forces.fz_min }}
+# Calculate coefficient of friction using the detected contact force
 variable abs_fz equal abs(v_fz_nanoparticle_upper_plane)
-variable fz_diff equal v_abs_fz-v_fz_min
+variable fz_diff equal v_abs_fz-v_normal_load
 variable shift equal 0.5*v_fz_diff+sqrt(v_fz_diff*v_fz_diff*0.25+0.0001)
-variable fz_safe equal v_fz_min+v_shift
+variable fz_safe equal v_normal_load+v_shift
 variable coefficient_friction equal abs(v_fx_nanoparticle_upper_plane / v_fz_safe)
 
 # Upper limit to avoid extreme peaks
@@ -234,25 +290,12 @@ dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/
 
 # Output thermo information
 thermo_style custom step time atoms &
-    temp c_temp_mobile v_nanoparticle_temperature &
-    press etotal pe ke &
-    v_fx_upper_plane v_z_upper_plane &
-    v_fz_nanoparticle_upper_plane v_fx_nanoparticle_upper_plane &
-    v_coefficient_friction v_coefficient_friction_capped &
-    v_defect_percent c_center_symmetric_average &
-    c_vonmises_average c_vonmises_max &
-    c_hotspots_count v_contact_count &
-    v_transferred_to_lower_group v_transferred_to_upper_group &
-    v_x_pos c_coord_avg cpu cpuremain
+    temp c_temp_mobile press etotal pe ke &
+    v_fx_nanoparticle_upper_plane v_fz_nanoparticle_upper_plane &
+    v_coefficient_friction c_center_symmetric_average
+thermo_modify flush yes
 
 thermo {{ simulation.thermo_frequency }}
-
-# Ignore atoms lost during simulation
-thermo_modify lost ignore
-
-# Energy minimization (to relax initial structure)
-min_style cg
-minimize {{ run.minimization.etol }} {{ run.minimization.ftol }} 5000 50000
 
 # System balancing
 run {{ run.equilibration_steps }}
@@ -261,5 +304,3 @@ restart {{ simulation.restart_frequency }} ${output_directory}/restart.*.binary
 
 # Run
 run {{ run.production_steps }}
-
-print "OK"

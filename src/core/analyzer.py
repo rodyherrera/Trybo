@@ -49,12 +49,10 @@ class Analyzer:
         
         if 'analysis' not in self.config:
             self.config['analysis'] = {}
-            
+
         self.config['analysis']['dump_folder'] = dump_folder
         self.logger.info(f'Dump folder set to: {dump_folder}')
         return True
-    
-    
  
     def set_output_folder(self, output_folder: str = None) -> str:
         output_folder = self.yaml_config.analysis_output_path

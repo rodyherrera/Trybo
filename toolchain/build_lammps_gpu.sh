@@ -52,6 +52,8 @@ cmake ../cmake \
     -DPKG_PTM=on \
     -DPKG_MANYBODY=on \
     -DPKG_RIGID=on \
+    -DLAMMPS_GPU_CUDA_ARCH=80 \
+    -DCMAKE_CUDA_FLAGS="-O3 --use_fast_math" \
     -DPKG_MISC=on \
     -DPKG_USER-MISC=on
 
