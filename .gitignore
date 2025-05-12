@@ -7,6 +7,7 @@ lammps/
 dumps/
 *.binary
 src/templates/builds
+.venv/
 
 __pycache__/*
 *.cpython*

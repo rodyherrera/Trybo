@@ -1,10 +1,7 @@
-from pathlib import Path
-from typing import Dict, List, Optional, Union, Any
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 import os
-import sys
 import time
-import yaml
 import visualizers
 import logging
 import parsers
@@ -16,7 +13,7 @@ class Analyzer:
 
         self.yaml_config = yaml_config
         self.config = yaml_config.config
-        self.logger.info("Using configuration from YamlConfig instance")
+        self.logger.info('Using configuration from YamlConfig instance')
         
         if dump_folder:
             self.set_dump_folder(dump_folder)
@@ -88,34 +85,37 @@ class Analyzer:
         original_dir = os.getcwd()
         os.chdir(output_folder)
         
-        success = True
-        try:
-            if analysis_type is None or analysis_type == 'all':
-                # Run all analyses
-                self.logger.info(f'Running all analyses on data from {dump_folder}')
-                for name, function in self.analysis_registry.items():
-                    self.logger.info(f'Start "{name}" analysis')
-                    try:
-                        function(dump_folder, timestep)
-                        self.logger.info(f'Completed "{name}" analysis')
-                    except Exception as e:
-                        self.logger.error(f'Error in {name} analysis: {str(e)}')
-                        success = False
-            elif analysis_type in self.analysis_registry:
-                # Run sepecific analysis
-                self.logger.info(f'Running {analysis_type} analysis on data from {dump_folder}')
-                try:
-                    self.analysis_registry[analysis_type](dump_folder, timestep)
-                except Exception as e:
-                    self.logger.error(f'Error in {analysis_type} analysis: {str(e)}')
-                    success = False
-            else:
-                self.logger.error(f'Unknown analysis type: {analysis_type}')
-                self.logger.info(f'Available analysis types: {", ".join(self.analysis_registry.keys())}')
-                success = False
-        finally:
-            # Return to original directory
+        to_run = []
+        if analysis_type and analysis_type in self.analysis_registry:
+            to_run.append((analysis_type, self.analysis_registry[analysis_type]))
+        elif analysis_type and analysis_type not in self.analysis_registry:
+            self.logger.error(f'Unknown analysis type: {analysis_type}')
+            self.logger.info(f'Available types: {", ".join(self.analysis_registry.keys())}')
             os.chdir(original_dir)
+            return False
+        else:
+            to_run = list(self.analysis_registry.items())
+
+        success = True
+        max_workers = min(len(to_run), os.cpu_count() or 1)
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(func, dump_folder, timestep): name
+                for name, func in to_run
+            }
+            for future in as_completed(futures):
+                name = futures[future]
+                try:
+                    result = future.result()
+                    if result:
+                        self.logger.info(f'Completed "{name}" analysis')
+                    else:
+                        self.logger.error(f'"{name}" analysis reported failure')
+                        success = False 
+                except Exception as e:
+                    self.logger.error(f'Error in "{name}" analysis: {e}')
+                    success = False
+        os.chdir(original_dir)
         elapsed_time = time.time() - start_time
         self.logger.info(f'Analysis completed in {elapsed_time:.2f} seconds')
         self.logger.info(f'Analysis results saved to {output_folder}')
@@ -150,12 +150,12 @@ class Analyzer:
         self.logger.info('Initializing Coordination analysis')
         coordination_file = os.path.join(dump_folder, 'coordination.dump')
 
-        if not os.path.exists(coord_file):
-            self.logger.error(f'Coordination file not found: {coord_file}')
+        if not os.path.exists(coordination_file):
+            self.logger.error(f'Coordination file not found: {coordination_file}')
             return False
         
-        parser = parsers.CoordinationParser(coord_file)
-        visualizer = parsers.CoordinationVisualizer(parser)
+        parser = parsers.CoordinationParser(coordination_file)
+        visualizer = visualizers.CoordinationVisualizer(parser)
 
         self.logger.info('Generating coordination distribution plot')
         visualizer.plot_coord_distribution(timestep)
@@ -207,7 +207,7 @@ class Analyzer:
 
     def run_hotspot_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
         self.logger.info('Initializing Hotspot analysis')
-        hotspot_file = os.path.join(dump_folder, 'hotspot.dump')
+        hotspot_file = os.path.join(dump_folder, 'hotspots.dump')
 
         if not os.path.exists(hotspot_file):
             self.logger.error(f'Hotspot file not found: {hotspot_file}')

@@ -166,7 +166,6 @@ class SimulationRunner:
         '''
         params = {
             'tpa': 256,
-            'newton': 'on',
             'binsize': 8.0,
             'split': 1.0,
             'mpi_processes': 1
@@ -184,9 +183,6 @@ class SimulationRunner:
         elif gpu_info['memory'] < 8000:
             params['binsize'] = 6.0
         
-        if gpu_info['compute_capability'] >= 7.0:
-            params['newton'] = 'off'
-        
         if cores >= 16:
             params['mpi_processes'] = 4
         elif cores >= 8:
@@ -200,7 +196,6 @@ class SimulationRunner:
         
         self.logger.info(f'Optimal parameters calculated:')
         self.logger.info(f'  - TPA: {params["tpa"]}')
-        self.logger.info(f'  - Newton: {params["newton"]}')
         self.logger.info(f'  - Binsize: {params["binsize"]}')
         self.logger.info(f'  - Split: {params["split"]}')
         self.logger.info(f'  - MPI processes: {params["mpi_processes"]}')
@@ -304,7 +299,6 @@ class SimulationRunner:
                 
                 neighbor_added = False
                 thermo_added = False
-                newton_added = False
                 balance_added = False
                 
                 for line in content:
@@ -313,7 +307,7 @@ class SimulationRunner:
                         neighbor_added = True
                         gpu_info = self.detect_gpu()
                         if gpu_info['memory'] >= 8000:
-                            f.write('neighbor 2.0 bin\n')
+                            f.write('\nneighbor 2.0 bin\n')
                         else:
                             f.write(line)
                     elif line_stripped.startswith('thermo '):
@@ -323,13 +317,6 @@ class SimulationRunner:
                             f.write(f'thermo {freq}\n')
                         else:
                             f.write(line)
-                    elif line_stripped.startswith('pair_style ') and any(style in line for style in ['lj/cut', 'morse', 'eam']):
-                        f.write(line)
-                        if not newton_added:
-                            newton_added = True
-                            gpu_info = self.detect_gpu()
-                            if gpu_info['compute_capability'] >= 7.0:
-                                f.write('newton off\n')
                     elif analysis['size'] == 'large' and line_stripped.startswith('run ') and not balance_added:
                         balance_added = True
                         f.write('balance 1.0 rcb\n')
@@ -338,7 +325,7 @@ class SimulationRunner:
                         f.write(line)
                 
                 if not neighbor_added:
-                    f.write('neighbor 2.0 bin\n')
+                    f.write('\nneighbor 2.0 bin\n')
                 
                 if not thermo_added:
                     freq = max(100, analysis['run_steps'] // 100) if analysis['run_steps'] > 0 else 100
@@ -429,8 +416,6 @@ class SimulationRunner:
                 '-pk', 'gpu', '1', 'split', str(params['split']), 'binsize', str(params['binsize']), 'tpa', str(params['tpa']), 'gpuID', '0'
             ])
 
-        
-        cmd.extend(['-pk', 'force', f'newton {params["newton"]}'])
         
         cmd.extend(['-in', self.simulation_file])
         

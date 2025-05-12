@@ -82,10 +82,10 @@ compute temp_mobile mobile_group temp
 compute disp_nanoparticle nanoparticle_group displace/atom
 
 # Dump
-dump 1 all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
+# dump 1 all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
 
 # Trace the trajectory of the nanoparticle during the simulation
-dump nanoparticle_trajectory nanoparticle_group custom ${dump_frequency} ${output_directory}/nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
+# dump nanoparticle_trajectory nanoparticle_group custom ${dump_frequency} ${output_directory}/nanoparticle_trajectory.lammpstrj id type x y z c_disp_nanoparticle[*]
 
 # Thermostat 
 fix thermostat_upper upper_plane_group langevin {{ dynamics.thermostat.upper_plane.temperature }} {{ dynamics.thermostat.upper_plane.temperature }} {{ dynamics.thermostat.upper_plane.damping }} {{ dynamics.thermostat.upper_plane.seed }}
@@ -195,7 +195,7 @@ fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficien
 
 # Identify structural defects (direct indicator of wear)
 compute center_symmetric all centro/atom 12
-dump center_symmetric_dump all custom ${analysis_related_dump_frequency} ${output_directory}/center_symmetric.dump id type x y z c_center_symmetric
+# dump center_symmetric_dump all custom ${analysis_related_dump_frequency} ${output_directory}/center_symmetric.dump id type x y z c_center_symmetric
 
 variable deformation_threshold equal {{ thresholds.deformation }}
 compute center_symmetric_sumsq all reduce sumsq c_center_symmetric
@@ -210,25 +210,25 @@ variable defect_percent equal 100.0*(c_center_symmetric_average/v_deformation_th
 group cna_group subtract all lower_plane_group upper_plane_group
 
 compute cna cna_group cna/atom {{ thresholds.cna_cutoff }}
-dump cna_dump all custom ${analysis_related_dump_frequency} ${output_directory}/cna.dump id type x y z c_cna
+# dump cna_dump all custom ${analysis_related_dump_frequency} ${output_directory}/cna.dump id type x y z c_cna
 
 # Von mises stress calculation
 compute vonmises all stress/atom NULL
 variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
-dump vonmises_dump all custom ${analysis_related_dump_frequency} ${output_directory}/vonmises.dump id type x y z v_atoms_stress
+# dump vonmises_dump all custom ${analysis_related_dump_frequency} ${output_directory}/vonmises.dump id type x y z v_atoms_stress
 
 # Analysis of the Squared Velocity Calculation
 compute velocity_squared all property/atom vx vy vz
 variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
-dump temperature_related_dump all custom ${analysis_related_dump_frequency} ${output_directory}/velocity_squared.dump id type x y z v_velocity_squared_atom
+# dump temperature_related_dump all custom ${analysis_related_dump_frequency} ${output_directory}/velocity_squared.dump id type x y z v_velocity_squared_atom
 
 # Identify and monitor the fragments (debris)
 compute cluster all cluster/atom {{ thresholds.cluster_cutoff }}
-dump debris_dump all custom ${analysis_related_dump_frequency} ${output_directory}/debris_clusters.dump id type x y z c_cluster
+# dump debris_dump all custom ${analysis_related_dump_frequency} ${output_directory}/debris_clusters.dump id type x y z c_cluster
 
 # Calculate and save the total energy per atom for the mobile group
 variable total_energy atom c_ke_mobile+c_pe_mobile
-dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
+# dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
 # Monitor the number of atoms in the nanoparticle cluster over time
 variable contact_count equal "count(nanoparticle_group)"
@@ -272,11 +272,11 @@ compute hotspots_count all reduce sum v_is_hotspot
 fix hotspot_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_hotspots_count file ${output_directory}/hotspots_count.txt
 
 # Dump para visualizar puntos calientes
-dump hotspots all custom ${analysis_related_dump_frequency} ${output_directory}/hotspots.dump id type x y z c_ke_hotspots v_is_hotspot
+# dump hotspots all custom ${analysis_related_dump_frequency} ${output_directory}/hotspots.dump id type x y z c_ke_hotspots v_is_hotspot
 
 # Calculate the coordination number for each atom
 compute coord all coord/atom cutoff {{ thresholds.coordination_cutoff }}
-dump coord_dump all custom ${analysis_related_dump_frequency} ${output_directory}/coordination.dump id type x y z c_coord
+# dump coord_dump all custom ${analysis_related_dump_frequency} ${output_directory}/coordination.dump id type x y z c_coord
 
 # Calculate statistics from coordination numbers
 compute coord_avg all reduce ave c_coord
@@ -286,7 +286,14 @@ fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max fil
 
 # Trajectory visualization with structure identifiers using PTM
 compute ptm all ptm/atom fcc {{ thresholds.ptm_cutoff }}
-dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/ptm.dump id type x y z c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
+# dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/ptm.dump id type x y z c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
+
+dump main_dump all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
+dump analysis_dump all custom ${analysis_related_dump_frequency} ${output_directory}/analysis.lammpstrj id type x y z &
+    c_center_symmetric c_cna v_atoms_stress v_velocity_squared_atom c_cluster &
+    c_ke_hotspots v_is_hotspot c_coord c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
+
+dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
 # Output thermo information
 thermo_style custom step time atoms &
