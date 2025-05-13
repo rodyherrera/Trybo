@@ -5,7 +5,6 @@ import os
 import time
 import visualizers
 import logging
-import parsers
 
 class Analyzer:
     def __init__(self, yaml_config=None, dump_folder=None):

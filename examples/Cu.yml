@@ -41,9 +41,6 @@ dynamics:
             temperature: 300.0
             damping: 10.0
             seed: 23456
-    forces:
-        normal: -100.0
-        fz_min: 2.0
     oscillation:
         amplitude: 10.0
         period: 25000
