@@ -284,9 +284,10 @@ compute ptm all ptm/atom fcc {{ thresholds.ptm_cutoff }}
 dump main_dump all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
 dump analysis_dump all custom ${analysis_related_dump_frequency} ${output_directory}/analysis.lammpstrj id type x y z &
     c_center_symmetric c_cna v_atoms_stress v_velocity_squared_atom c_cluster &
-    c_ke_hotspots v_is_hotspot c_coord c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
+    c_ke_hotspots v_is_hotspot c_coord c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6] &
+    c_ke_mobile c_pe_mobile v_total_energy
 
-dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
+# dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 
 # Output thermo information
 thermo_style custom step time atoms &
