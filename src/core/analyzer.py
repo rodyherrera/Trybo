@@ -5,22 +5,32 @@ import os
 import time
 import visualizers
 import logging
+import sys
 
 class Analyzer:
-    def __init__(self, yaml_config=None, dump_folder=None):
-        self.logger = logging.getLogger('Analyzer')
+    def __init__(self, dump_folder, yaml_config=None):
         self._setup_logging()
-        self.parser = BaseParser('/home/rodyherrera/Desktop/Trybo/analysis_results/copper_nanoparticle_wear_analysis/2025-05-12_18-52-27/analysis.lammpstrj')
-
+        self.set_dump_folder(dump_folder)
+        self.dump_folder = dump_folder
+        
+        self.logger = logging.getLogger('Analyzer')
+        self.parser = self._create_parser(dump_folder)
         self.yaml_config = yaml_config
         self.config = yaml_config.config
         self.logger.info('Using configuration from YamlConfig instance')
-        
 
-        if dump_folder:
-            self.set_dump_folder(dump_folder)
-        
-        self.analysis_registry = {
+        self.analysis_registry = self._register_analysis_methods()
+
+    def _create_parser(self):
+        analysis_file_path = os.path.join(self.dump_folder, 'analysis.lammpstrj')
+        if not os.path.isfile(analysis_file_path):
+            self.logger.error(f'Error: The file "analysis.lammpstrj" does not exist in the directory "{self.dump_folder}".')
+            sys.exit(1)
+        parser = BaseParser(analysis_file_path)
+        return parser
+
+    def _register_analysis_methods(self):
+        return {
             'cna': self.run_cna_analysis,
             'coordination': self.run_coordination_analysis,
             'debris': self.run_debris_analysis,
@@ -30,7 +40,7 @@ class Analyzer:
             'velocity_squared': self.run_velocity_squared_analysis,
             'energy': self.run_energy_analysis
         }
-    
+        
     def _setup_logging(self):
         handler = logging.StreamHandler()
         formatter = logging.Formatter(
@@ -44,7 +54,7 @@ class Analyzer:
     def set_dump_folder(self, dump_folder: str):
         if not os.path.exists(dump_folder) or not os.path.isdir(dump_folder):
             self.logger.error(f'Dump folder does not exist or is not a directory: {dump_folder}')
-            return False
+            sys.exit(1)
         
         if 'analysis' not in self.config:
             self.config['analysis'] = {}
@@ -87,24 +97,43 @@ class Analyzer:
         original_dir = os.getcwd()
         os.chdir(output_folder)
         
-        to_run = []
-        if analysis_type and analysis_type in self.analysis_registry:
-            to_run.append((analysis_type, self.analysis_registry[analysis_type]))
-        elif analysis_type and analysis_type not in self.analysis_registry:
-            self.logger.error(f'Unknown analysis type: {analysis_type}')
-            self.logger.info(f'Available types: {", ".join(self.analysis_registry.keys())}')
+        # Determine which analyses to run
+        analyses_to_run = self._get_analyses_to_run(analysis_type)
+        if not analyses_to_run:
             os.chdir(original_dir)
             return False
-        else:
-            to_run = list(self.analysis_registry.items())
 
+        # Execute analyses in parallel
+        success = self._execute_analyses(analyses_to_run, timestep)
+
+        os.chdir(original_dir)
+        elapsed_time = time.time() - start_time
+        self.logger.info(f'Analysis completed in {elapsed_time:.2f} seconds')
+        self.logger.info(f'Analysis results saved to {output_folder}')
+        
+        return success
+
+    def _get_analyses_to_run(self, analysis_type):
+        if not analysis_type:
+            return list(self.analysis_registry.items())
+        
+        if analysis_type in self.analysis_registry:
+            return [(analysis_type, self.analysis_registry[analysis_type])]
+
+        self.logger.error(f'Unknown analysis type: {analysis_type}')
+        self.logger.info(f'Available types: {", ".join(self.analysis_registry.keys())}')
+        return []
+    
+    def _execute_analyses(self, analyses, timestep):
         success = True
-        max_workers = min(len(to_run), os.cpu_count() or 1)
+        max_workers = min(len(analyses), os.cpu_count() or 1)
+
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(func, timestep): name
-                for name, func in to_run
+                executor.submit(function, timestep): name
+                for name, function in analyses
             }
+
             for future in as_completed(futures):
                 name = futures[future]
                 try:
@@ -117,12 +146,8 @@ class Analyzer:
                 except Exception as e:
                     self.logger.error(f'Error in "{name}" analysis: {e}')
                     success = False
-        os.chdir(original_dir)
-        elapsed_time = time.time() - start_time
-        self.logger.info(f'Analysis completed in {elapsed_time:.2f} seconds')
-        self.logger.info(f'Analysis results saved to {output_folder}')
         return success
-    
+                    
     def run_cna_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing CNA analysis')
         
