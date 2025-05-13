@@ -38,14 +38,14 @@ class PTMAnalyzer:
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
         
-        data = self.parser.get_data()[timestep_idx]
+        ptm_data = self.parser.get_analysis_data('ptm', timestep_idx)
+        structure_types = ptm_data[0].astype(int)
 
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
-            data = data[group_indices]
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            structure_types = structure_types[group_indices]
         
-        structure_types = data[:, 5].astype(int)
-
         counts = {}
         for struct_type, name in self.structure_names.items():
             counts[name] = np.sum(structure_types == struct_type)
@@ -53,13 +53,18 @@ class PTMAnalyzer:
         return counts
     
     def get_rmsd_statistics(self, timestep_idx=-1, group=None):
-        if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
-            data = data[group_indices]
-        
-        rmsd_values = data[:, 6]
-        valid_rmsd = rmsd_values[~np.isinf(rmsd_values) & ~np.isnan(rmsd_values)]
+        timesteps = self.parser.get_timesteps()
+        if timestep_idx < 0:
+            timestep_idx = len(timesteps) + timestep_idx
+        ptm_data = self.parser.get_analysis_data('ptm', timestep_idx)
+        rmsd_values = ptm_data[1]
 
+        data = self.parser.get_data(timestep_idx)
+        if group is not None and group != 'all':
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            rmsd_values = rmsd_values[group_indices]
+        valid_rmsd = rmsd_values[~np.isinf(rmsd_values) & ~np.isnan(rmsd_values)]
+    
         if len(valid_rmsd) > 0:
             stats = {
                 'mean': np.mean(valid_rmsd),
@@ -77,7 +82,7 @@ class PTMAnalyzer:
                 'std': float('nan')
             }
         return stats
-    
+
     def get_structure_evolution(self, group=None):
         timesteps = self.parser.get_timesteps()
         evolution = { name: [] for name in self.structure_names.values() }

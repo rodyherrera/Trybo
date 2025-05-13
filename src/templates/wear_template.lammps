@@ -51,8 +51,7 @@ pair_coeff * * {{ system.material.potential }}
 neigh_modify delay {{ neighbor.delay }} every {{ neighbor.every }} check {{ neighbor.check }} page {{ neighbor.page }} one {{ neighbor.one }} binsize {{ neighbor.binsize }}
 delete_atoms overlap 0.01 nanoparticle_group upper_plane_group
 
-# Ignore atoms lost during simulation
-thermo_modify lost ignore
+thermo_modify flush yes lost ignore
 
 # Energy minimization (to relax initial structure)
 min_style cg
@@ -300,7 +299,7 @@ thermo_style custom step time atoms &
     temp c_temp_mobile press etotal pe ke &
     v_fx_nanoparticle_upper_plane v_fz_nanoparticle_upper_plane &
     v_coefficient_friction c_center_symmetric_average
-thermo_modify flush yes
+thermo_modify flush yes lost ignore
 
 thermo {{ simulation.thermo_frequency }}
 

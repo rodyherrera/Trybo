@@ -6,16 +6,10 @@ class HotspotAnalyzer:
         self.parser = parser
 
     def get_hotspot_data(self, timestep_idx=-1):
-        data = self.parser.get_data()
-
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
-        
-        current_data = data[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-        ke_values = self.parser.get_column_data('c_ke_hotspots')
-        is_hotspot = self.parser.get_column_data('v_is_hotspot')
-
+        data = self.parser.get_data(timestep_idx)
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
+        ke_values = self.parser.get_analysis_data('ke_hotspots', timestep_idx)
+        is_hotspot = self.parser.get_analysis_data('is_hotspot', timestep_idx)
         return x, y, z, ke_values, is_hotspot
     
     def get_hotspot_stats(self, timestep_idx=-1):

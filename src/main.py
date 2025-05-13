@@ -73,7 +73,7 @@ def main():
             sys.exit('Error: in --analysis-only mode you must specify a dump folder (--dir).')
         run_analysis_mode(args.config, args.dir)
     else:
-        output_dir = args.dir or BUILDS_DIR
+        output_dir = args.directory or BUILDS_DIR
         run_full_mode(args.config, output_dir)
 
 if __name__ == '__main__':

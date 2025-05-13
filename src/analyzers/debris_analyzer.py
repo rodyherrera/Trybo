@@ -6,12 +6,7 @@ class DebrisAnalyzer:
         self.parser = parser
 
     def get_cluster_data(self, timestep_idx=-1):
-        data = self.parser.get_data()
-
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
-        
-        cluster_values = self.parser.get_column_data('c_cluster', timestep_idx)
+        cluster_values = self.parser.get_analysis_data('cluster', timestep_idx)
         unique_clusters = np.unique(cluster_values)
         
         cluster_sizes = {}
@@ -60,15 +55,10 @@ class DebrisAnalyzer:
         return sizes, counts
     
     def get_cluster_spatial_data(self, timestep_idx=-1, min_size=2):
-        data = self.parser.get_data()
+        data = self.parser.get_data(timestep_idx)
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
 
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
-        
-        current_data = data[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-
-        cluster_values = self.parser.get_column_data('c_cluster', timestep_idx)
+        cluster_values = self.parser.get_analysis_data('cluster', timestep_idx)
 
         _, cluster_sizes, cluster_atoms = self.get_cluster_data(timestep_idx)
         filtered_clusters = { key: value for key, value in cluster_sizes.items() if value >= min_size }

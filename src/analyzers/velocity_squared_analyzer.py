@@ -17,11 +17,12 @@ class VelocitySquaredAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            velocity_squared = velocity_squared[group_indices]
             data = data[group_indices]
-        velocity_squared = data[:, 5]
         hot_threshold = np.percentile(velocity_squared, threshold_percentile)
         hot_spots_mask = velocity_squared >= hot_threshold
         hot_spots_data = data[hot_spots_mask]
@@ -33,13 +34,12 @@ class VelocitySquaredAnalyzer:
         average_temperature = []
         max_temperature = []
         min_temperature = []
-        for idx, data in enumerate(all_data):
+        for idx in range(len(timesteps)):
+            velocity_squared = self.parser.get_analysis_data('velocity_squared', idx)
             if group is not None and group != 'all':
-                group_indices = get_atom_group_indices(self.parser, idx)[group]
-                current_data = data[group_indices]
-            else:
-                current_data = data
-            velocity_squared = current_data[:, 5]
+                data = self.parser.get_data(idx)
+                group_indices = self.parser.get_atom_group_indices(data)[group]
+                velocity_squared = velocity_squared[group_indices]
             temperature = self.velocity_to_temperature(velocity_squared)
             average_temperature.append(np.mean(temperature))
             max_temperature.append(np.max(temperature))
@@ -50,11 +50,11 @@ class VelocitySquaredAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
-            data = data[group_indices]
-        velocity_squared = data[:, 5]
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            velocity_squared = velocity_squared[group_indices]
         temperature = self.velocity_to_temperature(velocity_squared)
         stats = {
             'mean': np.mean(temperature),
@@ -70,13 +70,17 @@ class VelocitySquaredAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        
+        data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
-        velocity_squared = data[:, 5]
+        
+        velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
+        
         temperature = self.velocity_to_temperature(velocity_squared)
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
         digitized = np.digitize(coords, bins)
         bin_temps = [temperature[digitized == i].mean() for i in range(1, len(bins))]
+        
         return bin_centers, bin_temps

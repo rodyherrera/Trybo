@@ -11,12 +11,13 @@ class EnergyAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        energy_key = self.get_energy_column_by_type(energy_type)
+        energy_values = self.parser.get_analysis_data(energy_key, timestep_idx)
+
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
-            data = data[group_indices]
-        energy_col = self.get_energy_column_by_type(energy_type)
-        energy_values = data[:, energy_col]
+            data = self.parser.get_data(timestep_idx)
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            energy_values = energy_values[group_indices]
                 
         stats = {
             'mean': np.mean(energy_values),
@@ -31,19 +32,19 @@ class EnergyAnalyzer:
 
     def get_energy_evolution(self, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
-        all_data = self.parser.get_data()
-        energy_col = self.get_energy_column_by_type(energy_type)
+        energy_key = self.get_energy_column_by_type(energy_type)
         average_energy = []
         max_energy = []
         min_energy = []
         sum_energy = []
-        for idx, data in enumerate(all_data):
+        for idx in range(len(timesteps)):
+            energy_values = self.parser.get_analysis_data(energy_key, idx)
+            
             if group is not None and group != 'all':
-                group_indices = get_atom_group_indices(self.parser, idx)[group]
-                current_data = data[group_indices]
-            else:
-                current_data = data
-            energy_values = current_data[:, energy_col]
+                data = self.parser.get_data(idx)
+                group_indices = self.parser.get_atom_group_indices(data)[group]
+                energy_values = energy_values[group_indices]
+
             average_energy.append(np.mean(energy_values))
             max_energy.append(np.max(energy_values))
             min_energy.append(np.min(energy_values))
@@ -74,15 +75,13 @@ class EnergyAnalyzer:
     def get_energy_column_by_type(self, energy_type):
         types = {
             # c_ke_mobile
-            'kinetic': 5,
+            'kinetic': 'ke_mobile',
             # c_pe_mobile
-            'potential': 6,
+            'potential': 'pe_mobile',
             # v_total_energy
-            # return v_total_energy column
-            # in case there is no match within the type keys
-            # 'total': 7
+            'total': 'total_energy'
         }
-        return types.get(energy_type, 7)
+        return types.get(energy_type, 'total_energy')
 
     def calculate_energy_profile(self, timestep_idx=-1, axis='z', n_bins=20, energy_type='total'):
         timesteps = self.parser.get_timesteps()

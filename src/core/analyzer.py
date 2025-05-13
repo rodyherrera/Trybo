@@ -1,4 +1,5 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from core.base_parser import BaseParser
 
 import os
 import time
@@ -10,11 +11,13 @@ class Analyzer:
     def __init__(self, yaml_config=None, dump_folder=None):
         self.logger = logging.getLogger('Analyzer')
         self._setup_logging()
+        self.parser = BaseParser('/home/rodyherrera/Desktop/Trybo/analysis_results/copper_nanoparticle_wear_analysis/2025-05-12_18-52-27/analysis.lammpstrj')
 
         self.yaml_config = yaml_config
         self.config = yaml_config.config
         self.logger.info('Using configuration from YamlConfig instance')
         
+
         if dump_folder:
             self.set_dump_folder(dump_folder)
         
@@ -100,7 +103,7 @@ class Analyzer:
         max_workers = min(len(to_run), os.cpu_count() or 1)
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
-                executor.submit(func, dump_folder, timestep): name
+                executor.submit(func, timestep): name
                 for name, func in to_run
             }
             for future in as_completed(futures):
@@ -121,16 +124,10 @@ class Analyzer:
         self.logger.info(f'Analysis results saved to {output_folder}')
         return success
     
-    def run_cna_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_cna_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing CNA analysis')
-        cna_file = os.path.join(dump_folder, 'cna.dump')
-
-        if not os.path.exists(cna_file):
-            self.logger.error(f'CNA file not found: {cna_file}')
-            return False
         
-        parser = parsers.CommonNeighborAnalysisParser(cna_file)
-        visualizer = visualizers.CommonNeighborAnalysisVisualizer(parser)
+        visualizer = visualizers.CommonNeighborAnalysisVisualizer(self.parser)
 
         self.logger.info('Generating CNA distribution plot')
         visualizer.plot_structure_distribution(timestep)
@@ -146,16 +143,10 @@ class Analyzer:
 
         return True
 
-    def run_coordination_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_coordination_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Coordination analysis')
-        coordination_file = os.path.join(dump_folder, 'coordination.dump')
-
-        if not os.path.exists(coordination_file):
-            self.logger.error(f'Coordination file not found: {coordination_file}')
-            return False
         
-        parser = parsers.CoordinationParser(coordination_file)
-        visualizer = visualizers.CoordinationVisualizer(parser)
+        visualizer = visualizers.CoordinationVisualizer(self.parser)
 
         self.logger.info('Generating coordination distribution plot')
         visualizer.plot_coord_distribution(timestep)
@@ -177,16 +168,10 @@ class Analyzer:
 
         return True
     
-    def run_debris_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_debris_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Debris analysis')
-        debris_file = os.path.join(dump_folder, 'debris_clusters.dump')
-
-        if not os.path.exists(debris_file):
-            self.logger.error(f'Debris file not found: {debris_file}')
-            return False
         
-        parser = parsers.DebrisParser(debris_file)
-        visualizer = visualizers.DebrisVisualizer(parser)
+        visualizer = visualizers.DebrisVisualizer(self.parser)
 
         self.logger.info('Generating cluster evolution plot')
         visualizer.plot_cluster_evolution()
@@ -205,16 +190,10 @@ class Analyzer:
         
         return True
 
-    def run_hotspot_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_hotspot_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Hotspot analysis')
-        hotspot_file = os.path.join(dump_folder, 'hotspots.dump')
 
-        if not os.path.exists(hotspot_file):
-            self.logger.error(f'Hotspot file not found: {hotspot_file}')
-            return False
-
-        parser = parsers.HotspotParser(hotspot_file)
-        visualizer = visualizers.HotspotVisualizer(parser)
+        visualizer = visualizers.HotspotVisualizer(self.parser)
 
         self.logger.info('Generating energy distribution plot')
         visualizer.plot_energy_distribution(timestep)
@@ -233,16 +212,10 @@ class Analyzer:
         
         return True
 
-    def run_vonmises_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_vonmises_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing von Mises analysis')
-        vonmises_file = os.path.join(dump_folder, 'vonmises.dump')
-
-        if not os.path.exists(vonmises_file):
-            self.logger.error(f'Von Mises file not found: {vonmises_file}')
-            return False
         
-        parser = parsers.VonmisesParser(vonmises_file)
-        visualizer = visualizers.VonmisesVisualizer(parser)
+        visualizer = visualizers.VonmisesVisualizer(self.parser)
 
         self.logger.info('Generating stress evolution plot')
         visualizer.plot_stress_evolution()
@@ -265,22 +238,16 @@ class Analyzer:
 
         return True
 
-    def run_centro_symmetric_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_centro_symmetric_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Centro-Symmetric analysis')
-        centro_symmetric_file = os.path.join(dump_folder, 'center_symmetric.dump')
-
-        if not os.path.exists(centro_symmetric_file):
-            self.logger.error(f'Centro-Symmetric file not found: {centro_symmetric_file}')
-            return False
         
-        parser = parsers.CentroSymmetricParser(centro_symmetric_file)
-        visualizer = visualizers.CentroSymmetricVisualizer(parser)
+        visualizer = visualizers.CentroSymmetricVisualizer(self.parser)
 
         self.logger.info('Generating Centro-Symmetric parameter distribution')
         visualizer.plot_centro_symmetric_distribution(timestep)
         visualizer.plot_centro_symmetric_distribution(timestep, log_scale=True)
 
-        timesteps = parser.get_timesteps()
+        timesteps = self.parser.get_timesteps()
         if len(timesteps) > 1:
             self.logger.info('Generating defect evolution plots')
             visualizer.plot_defect_evolution()
@@ -309,21 +276,15 @@ class Analyzer:
     
         return True
 
-    def run_velocity_squared_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_velocity_squared_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Velocity Squared analysis')
-        velocity_squared_file = os.path.join(dump_folder, 'velocity_squared.dump')
-
-        if not os.path.exists(velocity_squared_file):
-            self.logger.error(f'Velocity Squared file not found: {velocity_squared_file}')
-            return False
         
-        parser = parsers.VelocitySquaredParser(velocity_squared_file)
-        visualizer = visualizers.VelocitySquaredVisualizer(parser)
+        visualizer = visualizers.VelocitySquaredVisualizer(self.parser)
 
         self.logger.info('Generating temperature distribution plot')
         visualizer.plot_temperature_distribution(timestep)
         
-        timesteps = parser.get_timesteps()
+        timesteps = self.parser.get_timesteps()
         if len(timesteps) > 1:
             self.logger.info('Generating temperature evolution plots')
             visualizer.plot_temperature_evolution()
@@ -350,23 +311,17 @@ class Analyzer:
         
         return True
 
-    def run_energy_analysis(self, dump_folder: str, timestep: int = -1) -> bool:
+    def run_energy_analysis(self, timestep: int = -1) -> bool:
         self.logger.info('Initializing Energy analysis')
-        energy_file = os.path.join(dump_folder, 'energy.dump')
-        
-        if not os.path.exists(energy_file):
-            self.logger.error(f'Energy file not found: {energy_file}')
-            return False
             
-        parser = parsers.EnergyParser(energy_file)
-        visualizer = visualizers.EnergyVisualizer(parser)
+        visualizer = visualizers.EnergyVisualizer(self.parser)
         
         self.logger.info('Generating energy distribution plots')
         visualizer.plot_energy_distribution(timestep, energy_type='kinetic')
         visualizer.plot_energy_distribution(timestep, energy_type='potential')
         visualizer.plot_energy_distribution(timestep, energy_type='total')
         
-        timesteps = parser.get_timesteps()
+        timesteps = self.parser.get_timesteps()
         if len(timesteps) > 1:
             self.logger.info('Generating energy evolution plots')
             visualizer.plot_energy_evolution(energy_type='kinetic')

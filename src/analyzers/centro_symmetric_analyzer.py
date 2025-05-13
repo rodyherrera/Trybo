@@ -31,16 +31,17 @@ class CentroSymmetricAnalyzer:
 
     def get_defect_statistics(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        
+
         if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
+            timestep_idx = len(timesteps) + timesteps
         
-        data = self.parser.get_data()[timestep_idx]
+        centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', timestep_idx)
+
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
-            data = data[group_indices]
-        
-        centro_symmetric_values = data[:, 5]
+            data = self.parser.get_data(timestep_idx)
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            centro_symmetric_values = centro_symmetric_values[group_indices]
+
         classifications = self.classify_atoms(centro_symmetric_values)
         total_atoms = len(centro_symmetric_values)
         stats = {
@@ -69,13 +70,14 @@ class CentroSymmetricAnalyzer:
             'perfect_percent': [],
             'stacking_fault_percent': []
         }
-        for idx, data in enumerate(all_data):
+        for idx in range(len(timesteps)):
+            centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', idx)
+
             if group is not None and group != 'all':
-                group_indices = get_atom_group_indices(self.parser, idx)[group]
-                current_data = data[group_indices]
-            else:
-                current_data = data
-            centro_symmetric_values = current_data[:, 5]
+                data = self.parser.get_data(idx)
+                group_indices = self.parser.get_atom_group_indices(data)[group]
+                centro_symmetric_values = centro_symmetric_values[group_indices]
+        
             classifications = self.classify_atoms(centro_symmetric_values)
             evolution['mean'].append(np.mean(centro_symmetric_values))
             evolution['max'].append(np.max(centro_symmetric_values))
@@ -91,11 +93,12 @@ class CentroSymmetricAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', timestep_idx)
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
-            group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
+            group_indices = self.parser.get_atom_group_indices(data)[group]
+            centro_symmetric_values = centro_symmetric_values[group_indices]
             data = data[group_indices]
-        centro_symmetric_values = data[:, 5]
         defect_mask = centro_symmetric_values >= threshold
         defect_data = data[defect_mask]
         return defect_data, defect_mask
@@ -104,10 +107,10 @@ class CentroSymmetricAnalyzer:
         timesteps = self.parser.get_timesteps()
         if timestep_idx < 0:
             timestep_idx = len(timesteps) + timestep_idx
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
-        centro_symmetric_values = data[:, 5]
+        centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', timestep_idx)
         bins = np.linspace(np.min(coords), np.max(coords), n_bins + 1)
         bin_centers = 0.5 * (bins[1:] + bins[:-1])
         defect_percent = []

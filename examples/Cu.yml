@@ -1,11 +1,11 @@
 simulation:
     name: 'Copper Nanoparticle Wear Analysis'
     description: 'Simulation of copper nanoparticle wear on a crystalline surface'
-    dump_frequency: 1000
-    analysis_dump_frequency: 1000
-    timesteps: 10000
-    timesteps_size: 0.001
-    restart_frequency: 250000
+    dump_frequency: 100
+    analysis_dump_frequency: 2000
+    timesteps: 5000
+    timesteps_size: 0.0001
+    restart_frequency: 50000
     thermo_frequency: 1000
 
 system:
@@ -41,6 +41,9 @@ dynamics:
             temperature: 300.0
             damping: 10.0
             seed: 23456
+    forces:
+        normal: -100.0
+        fz_min: 2.0
     oscillation:
         amplitude: 10.0
         period: 25000
@@ -52,16 +55,16 @@ run:
         etol: 1.0e-6
         # stopping tolerance for force (force units)
         ftol: 1.0e-8
-    equilibration_steps: 1000
-    production_steps: 10000
+    equilibration_steps: 20000
+    production_steps: 1000000
 
 neighbor:
-    delay: 10
-    every: 5
+    delay: 2
+    every: 1
     check: 'yes'
     page: 1000000
     one: 100000
-    binsize: 3.0
+    binsize: 2.5
 
 thresholds:
     deformation: 8.0

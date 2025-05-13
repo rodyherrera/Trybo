@@ -1,5 +1,5 @@
 from abc import ABC
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Union
 import numpy as np
 
 class BaseParser(ABC):
@@ -18,6 +18,9 @@ class BaseParser(ABC):
         # The x, y, and z values ​​in the LAMMPS dump files.
         # ITEM: ATOMS id type x y z [...]
         self._atoms_spatial_coordinates_indices = []
+
+        # Mapping between analysis types and column indices
+        self._analysis_column_map = {}
 
     def _parse_atoms_spatial_coordinates_indices(self):
         try:
@@ -71,11 +74,57 @@ class BaseParser(ABC):
         self._headers = headers
 
         self._parse_atoms_spatial_coordinates_indices()
+        self._create_analysis_column_map()
 
         self._is_parsed = True
 
         return timesteps, data, headers
     
+    def _create_analysis_column_map(self):
+        analysis_headers = {
+            'centro_symmetric': 'c_center_symmetric',
+            'cna': 'c_cna',
+            'vonmises': 'v_atoms_stress',
+            'velocity_squared': 'v_velocity_squared_atom',
+            'cluster': 'c_cluster',
+            'ke_hotspots': 'c_ke_hotspots',
+            'is_hotspot': 'v_is_hotspot',
+            'coord': 'c_coord',
+            'ptm': ['c_ptm[1]', 'c_ptm[2]', 'c_ptm[3]', 'c_ptm[4]', 'c_ptm[5]', 'c_ptm[6]']
+        }
+
+        for analysis_type, header in analysis_headers.items():
+            if isinstance(header, list):
+                # For arrays, store a list of indices
+                indices = []
+                for h in header:
+                    if h in self._headers:
+                        indices.append(self._headers.index(h))
+                if indices:
+                    self._analysis_column_map[analysis_type] = indices
+            elif header in self._headers:
+                self._analysis_column_map[analysis_type] = self._headers.index(header)
+        print(f'Analysis column map created: {self._analysis_column_map}')
+    
+    def get_analysis_data(self, analysis_type: str, timestep_idx: int = -1) -> Union[np.ndarray, List[np.ndarray]]:
+        if not self._is_parsed:
+            self.parse()
+        
+        if analysis_type not in self._analysis_column_map:
+            raise ValueError(f'Analysis type "{analysis_type}" not found in headers: {self._headers}')
+        
+        if timestep_idx < 0:
+            timestep_idx = len(self._data) + timestep_idx
+        
+        column_idx = self._analysis_column_map[analysis_type]
+
+        if isinstance(column_idx, list):
+            # Return multiple columns for array data
+            return [self._data[timestep_idx][:, i] for i in column_idx]
+        
+        # Return single column for scalar data
+        return self._data[timestep_idx][:, column_idx]
+
     def get_atom_group_indices(self, data):
         '''
         Identifies atom indices for different groups based on their position along the Z axis

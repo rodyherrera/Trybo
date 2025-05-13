@@ -6,13 +6,7 @@ class CoordinationAnalyzer:
         self.parser = parser
     
     def get_coord_data(self, timestep_idx=-1):
-        data = self.parser.get_data()
-
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
-        
-        coord_values = self.parser.get_column_data('c_coord', timestep_idx)
-
+        coord_values = self.parser.get_analysis_data('coord', timestep_idx)
         return coord_values
     
     def get_coord_distribution(self, timestep_idx=-1):
@@ -55,15 +49,9 @@ class CoordinationAnalyzer:
         return timesteps, mean_coord, perfect_ratio, defect_ratio
     
     def get_spatial_distribution(self, timestep_idx=-1):
-        data = self.parser.get_data()
-        headers = self.parser.get_headers()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
-        
-        current_data = data[timestep_idx]
-        x, y, z = self.parser.get_atoms_spatial_coordinates(current_data)
-        coord = self.parser.get_column_data('c_coord', timestep_idx)
+        data = self.parser.get_data(timestep_idx)
+        x, y, z = self.parser.get_atoms_spatial_coordinates(data)
+        coord = self.parser.get_analysis_data('coord', timestep_idx)
         return x, y, z, coord
     
     def classify_atoms(self, timestep_idx=-1):
