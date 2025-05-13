@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Union
 from functools import lru_cache
 from concurrent.futures import ProcessPoolExecutor
 from numba import njit
+from core.helpers import init_worker, _load_segment
 import numpy as np
 import gc
 import mmap
@@ -98,11 +99,26 @@ class BaseParser(ABC):
             z_idx = 4
         self._atoms_spatial_coordinates_indices = [x_idx, y_idx, z_idx]
 
-    def _load_all_timesteps(self):
-        with ProcessPoolExecutor() as executor:
-            data_list = list(executor.map(self._load_timestep_data, self._timesteps))
-        return data_list
+    def _load_segment(args):
+        filename, start, end, n_cols = args
+        with open(filename, 'r+b') as file:
+            mm = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
+            segment = mm[start:end]
+            mm.close()
+        flat = np.fromstring(segment, sep=' ')
+        return flat.reshape(-1, n_cols)
 
+    def _load_all_timesteps(self):
+        args = [
+            (start, end, len(self._headers))
+            for start, end in self._timestep_atom_info.values()
+        ]
+        with ProcessPoolExecutor(
+            initializer=init_worker,
+            initargs=(self.filename,)
+        ) as exe:
+            return list(exe.map(_load_segment, args))
+        
     def _create_analysis_column_map(self):
         analysis_headers = {
             'centro_symmetric': 'c_center_symmetric',
