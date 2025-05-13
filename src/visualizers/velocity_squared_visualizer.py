@@ -13,7 +13,7 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_distribution(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
@@ -62,7 +62,7 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_3d(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
@@ -87,7 +87,7 @@ class VelocitySquaredVisualizer:
     def plot_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
         timesteps = self.parser.get_timesteps()
         current_timestep = timesteps[timestep_idx]
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             filtered_data = data[group_indices]
@@ -116,7 +116,7 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
         velocity_squared = data[:, 5]

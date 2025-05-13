@@ -28,7 +28,7 @@ class VonmisesVisualizer:
 
     def plot_stress_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
 
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
@@ -61,7 +61,7 @@ class VonmisesVisualizer:
 
     def plot_stress_distribution(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         stress = data[:, 5]
         current_timestep = timesteps[timestep_idx]
 
@@ -112,7 +112,7 @@ class VonmisesVisualizer:
 
     def plot_stress_3d(self, timestep_idx=-1, group=None, percentile_threshold=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
 
         if group is not None and group != 'all':
@@ -150,7 +150,7 @@ class VonmisesVisualizer:
 
     def plot_stress_by_layer(self, timestep_idx=-1, axis='z', layers_to_create=10):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
 
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)

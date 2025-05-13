@@ -8,6 +8,6 @@ def get_data_from_coord_axis(axis, coords):
     return values.get(axis, z)
 
 def get_atom_group_indices(parser, timestep_idx):
-    data = parser.get_data()[timestep_idx]
+    data = parser.get_data(timestep_idx)
     atom_groups = parser.get_atom_group_indices(data)
     return atom_groups

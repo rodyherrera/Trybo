@@ -22,7 +22,7 @@ class CentroSymmetricVisualizer:
     
     def plot_centro_symmetric_distribution(self, timestep_idx=-1, group=None, log_scale=False):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
 
         if group is not None and group != 'all':
@@ -108,7 +108,7 @@ class CentroSymmetricVisualizer:
     def plot_defect_3d(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
         
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
@@ -145,7 +145,7 @@ class CentroSymmetricVisualizer:
         current_timestep = timesteps[timestep_idx]
         
         # Get full data for this timestep
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
 
         # Get defect regions
         if group is not None and group != 'all':
@@ -179,7 +179,7 @@ class CentroSymmetricVisualizer:
 
     def plot_centro_symmetric_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)

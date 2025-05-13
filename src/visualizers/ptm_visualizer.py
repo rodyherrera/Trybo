@@ -66,7 +66,7 @@ class PTMVisualizer:
     
     def plot_3d_structures(self, timestep_idx=-1, group=None, filter_rmsd=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
@@ -105,7 +105,7 @@ class PTMVisualizer:
 
     def plot_rmsd_distribution(self, timestep_idx=-1, group=None, max_rmsd=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
@@ -145,7 +145,7 @@ class PTMVisualizer:
     
     def plot_structure_by_layer(self, timestep_idx=-1, axis='z', n_layers=10):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         current_timestep = timesteps[timestep_idx]
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates()
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)

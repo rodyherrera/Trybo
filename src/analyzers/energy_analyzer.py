@@ -51,7 +51,7 @@ class EnergyAnalyzer:
     
     def get_high_energy_regions(self, timestep_idx=-1, threshold_percentile=95, energy_type='total', group=None):
         timesteps = self.parser.get_timesteps()
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
             group_indices = get_atom_group_indices(self.parser, timestep_idx)[group]
             data = data[group_indices]
@@ -80,7 +80,7 @@ class EnergyAnalyzer:
         return types.get(energy_type, 'total_energy')
 
     def calculate_energy_profile(self, timestep_idx=-1, axis='z', n_bins=20, energy_type='total'):
-        data = self.parser.get_data()[timestep_idx]
+        data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)
         energy_col = self.get_energy_column_by_type(energy_type)

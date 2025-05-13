@@ -1,6 +1,7 @@
 from abc import ABC
-from typing import List, Dict, Any, Union
+from typing import List, Dict, Any, Union, Optional
 import numpy as np
+import gc
 
 class BaseParser(ABC):
     def __init__(self, filename: str):
@@ -10,6 +11,9 @@ class BaseParser(ABC):
         self._data = []
         self._headers = []
         self._is_parsed = False
+        # Para parseo selectivo
+        self._timestep_positions = {}
+        self._file_positions = []
         # Simulation box dimensions
         self._box_bounds = None
         # Metadata from the dump file
@@ -21,6 +25,42 @@ class BaseParser(ABC):
 
         # Mapping between analysis types and column indices
         self._analysis_column_map = {}
+        
+        # Indexing the file at initialization for better performance
+        self._index_file()
+
+    def _index_file(self):
+        with open(self.filename, 'r') as file:
+            position = file.tell()
+            line = file.readline()
+            
+            while line:
+                if 'ITEM: TIMESTEP' in line:
+                    # Read the timestep number
+                    timestep = int(file.readline().strip())
+                    # Save the position where this timestep's data begins
+                    self._timestep_positions[timestep] = position
+                    self._timesteps.append(timestep)
+                    
+                    # Skip ahead to find atoms data
+                    while line and 'ITEM: ATOMS' not in line:
+                        line = file.readline()
+                        if not line:
+                            break
+                    
+                    if line and 'ITEM: ATOMS' in line:
+                        # Save the headers once
+                        if not self._headers:
+                            self._headers = line.split()[2:]
+                            self._parse_atoms_spatial_coordinates_indices()
+                            self._create_analysis_column_map()
+                            self._is_parsed = True
+                
+                position = file.tell()
+                line = file.readline()
+        
+        if not self._headers:
+            raise ValueError('No headers were found in the file. Check the format.')
 
     def _parse_atoms_spatial_coordinates_indices(self):
         try:
@@ -34,52 +74,41 @@ class BaseParser(ABC):
             z_idx = 4
         self._atoms_spatial_coordinates_indices = [x_idx, y_idx, z_idx]
 
-    def parse(self):
-        timesteps = []
-        data = []
-        headers = []
+    def _load_all_timesteps(self):
+        self._data = []
+        for timestep in self._timesteps:
+            self._data.append(self._load_timestep_data(timestep))
+        return self._timesteps, self._data, self._headers
 
+    def _load_timestep_data(self, timestep):
+        if timestep not in self._timestep_positions:
+            if isinstance(timestep, int) and timestep < 0:
+                try:
+                    actual_timestep = self._timesteps[timestep]
+                    return self._load_timestep_data(actual_timestep)
+                except IndexError:
+                    raise ValueError(f'Invalid timestep index: {timestep}')
+            else:
+                raise ValueError(f'Timestep {timestep} not found in file')
         with open(self.filename, 'r') as file:
+            file.seek(self._timestep_positions[timestep])
+            # Skip the TIMESTEP line and timestep value
+            file.readline()
+            file.readline()
+            # Skip to the ATOMS section
             line = file.readline()
-            while line:
-                if 'ITEM: TIMESTEP' in line:
-                    timestep = int(file.readline().strip())
-                    timesteps.append(timestep)
-                    
-                    while line and 'ITEM: ATOMS' not in line:
-                        line = file.readline()
-                        if not line:
-                            break
-                    
-                    if line and 'ITEM: ATOMS' in line:
-                        headers = line.split()[2:]
-                        
-                        atoms_data = []
-                        line = file.readline()
-                        while line and 'ITEM:' not in line:
-                            values = [float(val) for val in line.split()]
-                            atoms_data.append(values)
-                            line = file.readline()
-                        
-                        data.append(np.array(atoms_data))
-                        continue
-                
+            while line and 'ITEM: ATOMS' not in line:
                 line = file.readline()
-    
-        if headers is None:
-            raise ValueError('No headers were found in the file. Check the format.')
+            if not line or 'ITEM: ATOMS' not in line:
+                raise ValueError(f'Could not find ATOMS section for timestep {timestep}')
+            atoms_data = []
+            line = file.readline()
+            while line and 'ITEM:' not in line:
+                values = [float(value) for value in line.split()]
+                atoms_data.append(values)
+                line = file.readline()
+            return np.array(atoms_data)
 
-        self._timesteps = timesteps
-        self._data = data
-        self._headers = headers
-
-        self._parse_atoms_spatial_coordinates_indices()
-        self._create_analysis_column_map()
-
-        self._is_parsed = True
-
-        return timesteps, data, headers
-    
     def _create_analysis_column_map(self):
         analysis_headers = {
             'centro_symmetric': 'c_center_symmetric',
@@ -95,7 +124,6 @@ class BaseParser(ABC):
 
         for analysis_type, header in analysis_headers.items():
             if isinstance(header, list):
-                # For arrays, store a list of indices
                 indices = []
                 for h in header:
                     if h in self._headers:
@@ -107,20 +135,40 @@ class BaseParser(ABC):
         print(f'Analysis column map created: {self._analysis_column_map}')
     
     def get_analysis_data(self, analysis_type: str, timestep_idx: int = -1) -> Union[np.ndarray, List[np.ndarray]]:
-        if not self._is_parsed:
-            self.parse()
-        
         if analysis_type not in self._analysis_column_map:
             raise ValueError(f'Analysis type "{analysis_type}" not found in headers: {self._headers}')
         
         column_idx = self._analysis_column_map[analysis_type]
 
+        if timestep_idx < 0:
+            timestep_idx = len(self._timesteps) + timestep_idx
+        
+        timestep_data = self._get_timestep_data(timestep_idx)
+
         if isinstance(column_idx, list):
             # Return multiple columns for array data
-            return [self._data[timestep_idx][:, i] for i in column_idx]
+            return [timestep_data[:, i] for i in column_idx]
         
-        # Return single column for scalar data
-        return self._data[timestep_idx][:, column_idx]
+        return timestep_data[:, column_idx]
+    
+    def _get_timestep_data(self, timestep_idx):
+        if timestep_idx < len(self._data):
+            timestep_data = self._data[timestep_idx]
+            if timestep_data is not None and len(timestep_data) > 0:
+                return timestep_data
+        
+        timestep = self._timesteps[timestep_idx]
+        timestep_data = self._load_timestep_data(timestep)
+
+        while len(self._data) <= timestep_idx:
+            self._data.append(None)
+        
+        self._data[timestep_idx] = timestep_data
+        return timestep_data
+
+    def clear_data_cache(self):
+        self._data = []
+        gc.collect()
 
     def get_atom_group_indices(self, data):
         '''
@@ -154,8 +202,6 @@ class BaseParser(ABC):
         }
         
     def get_atoms_spatial_coordinates(self, data):
-        if not self._is_parsed:
-            self.parse()
         x_idx, y_idx, z_idx = self._atoms_spatial_coordinates_indices
         x = data[:, x_idx]
         y = data[:, y_idx]
@@ -164,24 +210,34 @@ class BaseParser(ABC):
     
     def get_data(self, timestep_idx = None) -> np.ndarray:
         if not self._is_parsed:
-            self.parse()
+            self._index_file()
+        
         if timestep_idx is not None:
-            return self._data[timestep_idx]
+            if isinstance(timestep_idx, int):
+                if timestep_idx < 0:
+                    timestep_idx = len(self._timesteps) + timestep_idx
+                return self._get_timestep_data(timestep_idx)
+            else:
+                # Handle timestep value instead of index
+                for idx, timestep in enumerate(self._timesteps):
+                    if timestep == timestep_idx:
+                        return self._get_timestep_data(idx)
+                raise ValueError(f"Timestep {timestep_idx} not found")
+                
+        # Load all data if requested (but warn about memory usage)
+        if not self._data or len(self._data) < len(self._timesteps):
+            print("WARNING: Loading all timesteps into memory. This may consume a lot of RAM.")
+            self._load_all_timesteps()
+            
         return self._data
     
     def get_headers(self) -> List[str]:
-        if not self._is_parsed:
-            self.parse()
         return self._headers
     
     def get_timesteps(self) -> Dict[str, Any]:
-        if not self._is_parsed:
-            self.parse()
         return self._timesteps
     
     def get_column_data(self, column_name: str, timestep_idx=-1, data=None) -> np.ndarray:
-        if not self._is_parsed:
-            self.parse()
         try:
             column_idx = self._headers.index(column_name)
         except ValueError:
@@ -193,13 +249,9 @@ class BaseParser(ABC):
         return self._data[timestep_idx][:, column_idx]
 
     def get_metadata(self) -> Dict[str, Any]:
-        if not self._is_parsed:
-            self.parse()
         return self._metadata
     
     def get_atom_types(self, timestep_idx=-1) -> np.ndarray:
-        if not self._is_parsed:
-            self.parse()
         try:
             type_idx = self._headers.index('type')
         except ValueError:
@@ -209,8 +261,6 @@ class BaseParser(ABC):
         return self._data[timestep_idx][:, type_idx].astype(int)
 
     def get_atom_count(self, timestep_idx=-1) -> int:
-        if not self._is_parsed:
-            self.parse()
         if timestep_idx < 0:
             timestep_idx = len(self._data) + timestep_idx
         return len(self._data[timestep_idx])

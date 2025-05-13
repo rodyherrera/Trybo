@@ -25,6 +25,37 @@ def parse_args():
         default=None,
         help='Dump folder (analysis-only) or output directory (full run)'
     )
+    parser.add_argument(
+        '--memory-efficient',
+        action='store_true',
+        help='Enable memory efficient mode - loads data selectively to reduce RAM usage.'
+    )
+    parser.add_argument(
+        '--normal-memory',
+        action='store_true',
+        help='Disable memory efficient mode - loads all data at once (higher RAM usage but potentially faster).'
+    )
+    parser.add_argument(
+        '--parallel',
+        action='store_true',
+        help='Run analyses in parallel for faster execution (may use more memory).'
+    )
+    parser.add_argument(
+        '--sequential',
+        action='store_true',
+        help='Run analyses sequentially for better memory control (slower but safer).'
+    )
+    parser.add_argument(
+        '--max-workers',
+        type=int,
+        default=0,
+        help='Maximum number of parallel workers. Default: number of CPU cores.'
+    )
+    parser.add_argument(
+        '--analysis-type',
+        type=str,
+        help='Run only a specific analysis type. Options: cna, coordination, debris, hotspot, vonmises, centro_symmetric, velocity_squared, energy'
+    )
     return parser.parse_args()
 
 def load_config(yaml_file: str, output_dir: str) -> YamlConfig:
@@ -51,11 +82,10 @@ def run_full_mode(yaml_file: str, output_dir: str) -> None:
         sys.exit('Error: failed to render simulation template.')
     simulation_path = config.get_simulation_file_path()
     runner = SimulationRunner(simulation_path)
-    analyzer = Analyzer(yaml_config=config)
-
-    # Execute simulation
     if not runner.execute():
         sys.exit('Error: simulation failed.')
+    analyzer = Analyzer(yaml_config=config, dump_folder=simulation_path)
+
     print('Simulation completed successfully.')
 
     # Execute analysis

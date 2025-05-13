@@ -6,20 +6,27 @@ import time
 import visualizers
 import logging
 import sys
+import gc
 
 class Analyzer:
-    def __init__(self, dump_folder, yaml_config=None):
-        self._setup_logging()
-        self.set_dump_folder(dump_folder)
-        self.dump_folder = dump_folder
-        
+    def __init__(self, yaml_config=None, dump_folder=None):
         self.logger = logging.getLogger('Analyzer')
-        self.parser = self._create_parser(dump_folder)
-        self.yaml_config = yaml_config
-        self.config = yaml_config.config
-        self.logger.info('Using configuration from YamlConfig instance')
+        self._setup_logging()
+        self.dump_folder = dump_folder
 
+        self.parser = self._create_parser()
+        self.yaml_config = yaml_config
+        self.config = yaml_config.config if yaml_config else {}
+        if yaml_config:
+            self.logger.info('Using configuration from YamlConfig instance')
+
+        if dump_folder:
+            self.set_dump_folder(dump_folder)
+        
         self.analysis_registry = self._register_analysis_methods()
+        self.memory_efficient = True
+        self.parallel_execution = False
+        self.max_workers = os.cpu_count() or 1
 
     def _create_parser(self):
         analysis_file_path = os.path.join(self.dump_folder, 'analysis.lammpstrj')
@@ -28,6 +35,14 @@ class Analyzer:
             sys.exit(1)
         parser = BaseParser(analysis_file_path)
         return parser
+
+    def enable_memory_efficient_mode(self, enabled=True):
+        self.memory_efficient = enabled
+        self.logger.info(f'Memory efficient mode: {"enabled" if enabled else "disabled"}')
+
+    def enable_parallel_execution(self, enabled=True):
+        self.parallel_execution = enabled
+        self.logger.info(f'Parallel execution: {"enabled" if enabled else "disabled (sequential)"}')
 
     def _register_analysis_methods(self):
         return {
@@ -103,8 +118,11 @@ class Analyzer:
             os.chdir(original_dir)
             return False
 
-        # Execute analyses in parallel
-        success = self._execute_analyses(analyses_to_run, timestep)
+        success = True
+        if self.parallel_execution and len(analyses_to_run) > 1:
+            success = self.run_analysis_parallel(analyses_to_run, timestep)
+        else:
+            success = self._run_analyses_sequential(analyses_to_run, timestep)
 
         os.chdir(original_dir)
         elapsed_time = time.time() - start_time
@@ -113,6 +131,64 @@ class Analyzer:
         
         return success
 
+    def _run_analyses_sequential(self, analyses_to_run, timestep):
+        success = True
+        for name, function in analyses_to_run:
+            try:
+                self.logger.info(f'Starting "{name}" analysis...')
+                result = function(timestep)
+                if result:
+                    self.logger.info(f'Completed "{name}" analysis')
+                else:
+                    self.logger.error(f'"{name}" analysis reported failure')
+                    success = False
+                if self.memory_efficient:
+                    self.parser.clear_data_cache()
+                    gc.collect()
+            except Exception as e:
+                self.logger.error(f'Error in "{name}" analysis: {e}')
+                success = False
+        return success
+
+    def run_analysis_parallel(self, analyses_to_run, timestep):
+        success = True
+        max_workers = min(len(analyses_to_run), self.max_workers)
+        self.logger.info(f'Running {len(analyses_to_run)} analyses in parallel with {max_workers} workers')
+        if self.memory_efficient and len(analyses_to_run) > max_workers:
+            batch_size = max(1, max_workers // 2)
+            self.logger.info(f'Memory efficient mode: processing in batches of {batch_size}')
+            for i in range(0, len(analyses_to_run), batch_size):
+                batch = analyses_to_run[i:i + batch_size]
+                batch_success = self._execute_parallel_batch(batch, timestep, max_workers)
+                success = success and batch_success
+                self.parser.clear_data_cache()
+                gc.collect()
+        else:
+            success = self._execute_parallel_batch(analyses_to_run, timestep, max_workers)
+        return success
+
+    def _execute_parallel_batch(self, analyses_batch, timestep, max_workers):
+        with ProcessPoolExecutor(max_workers=max_workers) as executor:
+            futures = {
+                executor.submit(function, timestep): name
+                for name, function in analyses_batch
+            }
+
+            for future in as_completed(futures):
+                name = futures[future]
+                try:
+                    result = future.result()
+                    if result:
+                        self.logger.info(f'Completed "{name}" analysis')
+                    else:
+                        self.logger.error(f'"{name}" analysis reported failure')
+                        success = False    
+                except Exception as e:
+                    self.logger.error(f'Error in "{name}" analysis: {e}')
+                    success = False
+        return success
+    
+    
     def _get_analyses_to_run(self, analysis_type):
         if not analysis_type:
             return list(self.analysis_registry.items())
