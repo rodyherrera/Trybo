@@ -22,10 +22,6 @@ class CentroSymmetricVisualizer:
     
     def plot_centro_symmetric_distribution(self, timestep_idx=-1, group=None, log_scale=False):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
@@ -112,9 +108,6 @@ class CentroSymmetricVisualizer:
     def plot_defect_3d(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
         
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
@@ -148,9 +141,6 @@ class CentroSymmetricVisualizer:
 
     def plot_defect_regions(self, timestep_idx=-1, threshold=None, group=None):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         
         current_timestep = timesteps[timestep_idx]
         
@@ -189,10 +179,6 @@ class CentroSymmetricVisualizer:
 
     def plot_centro_symmetric_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
@@ -226,10 +212,6 @@ class CentroSymmetricVisualizer:
 
     def plot_defect_by_groups(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         
         # Get statistics for each group
@@ -279,8 +261,6 @@ class CentroSymmetricVisualizer:
 
     def plot_defect_profile(self, timestep_idx=-1, axis='z'):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         bin_centers, defect_percent, average_centro_symmetric = self.analyzer.calculate_defect_profile(timestep_idx, axis)
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), sharex=True)

@@ -40,22 +40,21 @@ mkdir build
 cd build
 
 cmake ../cmake \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DPKG_GPU=on \
-    -DGPU_API=cuda \
-    -DGPU_ARCH=sm_86 \
-    -DBUILD_OMP=on \
-    -DCMAKE_CXX_COMPILER=g++ \
-    -DCMAKE_C_COMPILER=gcc \
-    -DPKG_MOLECULE=on \
-    -DPKG_KSPACE=on \
-    -DPKG_PTM=on \
-    -DPKG_MANYBODY=on \
-    -DPKG_RIGID=on \
-    -DLAMMPS_GPU_CUDA_ARCH=80 \
-    -DCMAKE_CUDA_FLAGS="-O3 --use_fast_math" \
-    -DPKG_MISC=on \
-    -DPKG_USER-MISC=on
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_COMPILER=gcc \
+  -DCMAKE_CXX_COMPILER=g++ \
+  -DPKG_GPU=on \
+  -DGPU_API=cuda \
+  -DGPU_ARCH=sm_86 \
+  -DBUILD_OMP=on \
+  -DPKG_MOLECULE=on \
+  -DPKG_KSPACE=on \
+  -DPKG_PTM=on \
+  -DPKG_MANYBODY=on \
+  -DPKG_RIGID=on \
+  -DPKG_MISC=on \
+  -DPKG_USER_MISC=on \
+  -DCMAKE_CUDA_FLAGS="-O3 --use_fast_math"
 
 echo "Compiling LAMMPS (this may take several minutes)..."
 make -j$(nproc)

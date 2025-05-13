@@ -1,10 +1,10 @@
 simulation:
     name: 'Copper Nanoparticle Wear Analysis'
     description: 'Simulation of copper nanoparticle wear on a crystalline surface'
-    dump_frequency: 100
-    analysis_dump_frequency: 2000
+    dump_frequency: 10000
+    analysis_dump_frequency: 50000
     timesteps: 5000
-    timesteps_size: 0.0001
+    timesteps_size: 0.001
     restart_frequency: 50000
     thermo_frequency: 1000
 
@@ -56,12 +56,12 @@ run:
     production_steps: 1000000
 
 neighbor:
-    delay: 2
-    every: 1
+    delay: 5
+    every: 2
     check: 'yes'
-    page: 1000000
-    one: 100000
-    binsize: 2.5
+    page: 500000
+    one: 50000
+    binsize: 3.0
 
 thresholds:
     deformation: 8.0

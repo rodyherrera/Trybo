@@ -33,8 +33,6 @@ class CommonNeighborAnalysisAnalyzer:
     
     def get_structure_counts(self, timestep_idx=-1):
         data = self.parser.get_data()
-        if timestep_idx < 0:
-            timestep_idx = len(data) + timestep_idx
         cna_values = self.parser.get_analysis_data('cna', timestep_idx)
         # Ocurrences of each structure type
         unique, counts = np.unique(cna_values, return_counts=True)
@@ -73,11 +71,6 @@ class CommonNeighborAnalysisAnalyzer:
     
     def compare_structures(self, timestep_idx1=0, timestep_idx2=-1):
         data = self.parser.get_data()
-        
-        if timestep_idx1 < 0:
-            timestep_idx1 = len(data) + timestep_idx1
-        if timestep_idx2 < 0:
-            timestep_idx2 = len(data) + timestep_idx2
         
         structure_counts1 = self.get_structure_counts(timestep_idx1)
         structure_counts2 = self.get_structure_counts(timestep_idx2)

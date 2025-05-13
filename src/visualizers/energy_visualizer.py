@@ -19,8 +19,6 @@ class EnergyVisualizer:
     
     def plot_energy_distribution(self, timestep_idx=-1, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
@@ -107,10 +105,6 @@ class EnergyVisualizer:
     
     def plot_energy_3d(self, timestep_idx=-1, group=None, energy_type='total'):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
@@ -156,10 +150,6 @@ class EnergyVisualizer:
     
     def plot_high_energy_regions(self, timestep_idx=-1, threshold_percentile=95, energy_type='total', group=None):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         data = self.parser.get_data()[timestep_idx]
         
@@ -209,10 +199,6 @@ class EnergyVisualizer:
     
     def plot_energy_heatmaps(self, timestep_idx=-1, energy_type='total'):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         
@@ -293,10 +279,6 @@ class EnergyVisualizer:
     
     def plot_energy_profile(self, timestep_idx=-1, axis='z', energy_type='total'):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         
         if energy_type == 'kinetic':
@@ -330,10 +312,6 @@ class EnergyVisualizer:
 
     def plot_energy_comparison(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         

@@ -32,9 +32,6 @@ class CentroSymmetricAnalyzer:
     def get_defect_statistics(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
 
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timesteps
-        
         centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', timestep_idx)
 
         if group is not None and group != 'all':
@@ -91,8 +88,6 @@ class CentroSymmetricAnalyzer:
         if threshold is None:
             threshold = self.defect_threshold
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         centro_symmetric_values = self.parser.get_analysis_data('centro_symmetric', timestep_idx)
         data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
@@ -105,8 +100,6 @@ class CentroSymmetricAnalyzer:
 
     def calculate_defect_profile(self, timestep_idx=-1, axis='z', n_bins=20):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)

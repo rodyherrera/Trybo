@@ -25,10 +25,6 @@ class CoordinationVisualizer:
 
     def plot_coord_distribution(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         coord_values, counts, percentages = self.analyzer.get_coord_distribution(timestep_idx)
         plt.figure(figsize=(12, 7))
@@ -92,8 +88,6 @@ class CoordinationVisualizer:
 
     def plot_coord_spatial(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         x, y, z, coord = self.analyzer.get_spatial_distribution(timestep_idx)
         cmap_colors = [
@@ -131,10 +125,6 @@ class CoordinationVisualizer:
 
     def plot_atom_classification(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         perfect, surface, defect = self.analyzer.classify_atoms(timestep_idx)
         x, y, z, _ = self.analyzer.get_spatial_distribution(timestep_idx)
@@ -173,10 +163,6 @@ class CoordinationVisualizer:
 
     def plot_coord_ranges(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         ranges, counts, percentages = self.analyzer.get_coord_range_distribution(timestep_idx)
         colors = [self.coord_colors['low'], self.coord_colors['surface'], 

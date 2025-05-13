@@ -77,10 +77,6 @@ class CoordinationAnalyzer:
     def compare_timesteps(self, timestep_idx1=0, timestep_idx2=-1):
         data = self.parser.get_data()
         timesteps = self.parser.get_timesteps()
-        if timestep_idx1 < 0:
-            timestep_idx1 = len(data) + timestep_idx1
-        if timestep_idx2 < 0:
-            timestep_idx2 = len(data) + timestep_idx2
         ranges1, counts1, percentages1 = self.get_coord_range_distribution(timestep_idx1)
         ranges2, counts2, percentages2 = self.get_coord_range_distribution(timestep_idx2)
         return {

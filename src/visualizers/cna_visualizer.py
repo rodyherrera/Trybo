@@ -22,10 +22,6 @@ class CommonNeighborAnalysisVisualizer:
     
     def plot_structure_distribution(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         structure_counts = self.analyzer.get_structure_counts(timestep_idx)
         current_timestep = timesteps[timestep_idx]
 
@@ -69,10 +65,6 @@ class CommonNeighborAnalysisVisualizer:
 
     def plot_structure_heatmap(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-
         current_timestep = timesteps[timestep_idx]
         x, y, z, cna = self.analyzer.get_spatial_distribution(timestep_idx)
         cmap_colors = [self.structure_colors.get(i, 'lightgray') for i in range(6)]
@@ -105,12 +97,6 @@ class CommonNeighborAnalysisVisualizer:
 
     def plot_structure_comparison(self, timestep_idx1=0, timestep_idx2=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx1 < 0:
-            timestep_idx1 = len(timesteps) + timestep_idx1
-        if timestep_idx2 < 0:
-            timestep_idx2 = len(timesteps) + timestep_idx2
-
         comparison = self.analyzer.compare_structures(timestep_idx1, timestep_idx2)
         timestep1 = timesteps[timestep_idx1]
         timestep2 = timesteps[timestep_idx2]

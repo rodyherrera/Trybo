@@ -11,10 +11,6 @@ class HotspotVisualizer:
     
     def plot_energy_distribution(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         energy_bins, _, histogram_normalized, threshold = self.analyzer.get_energy_distribution(timestep_idx)
         stats = self.analyzer.get_hotspot_stats(timestep_idx)
@@ -74,9 +70,6 @@ class HotspotVisualizer:
 
     def plot_hotspot_spatial(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_energy_distribution(timestep_idx)
         fig, axs = plt.subplots(2, 3, figsize=(18, 12))
@@ -129,8 +122,6 @@ class HotspotVisualizer:
     
     def plot_hotspot_clusters_3d(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_energy_distribution(timestep_idx)
         clusters, cluster_sizes, cluster_positions = self.analyzer.get_hotspot_clusters(timestep_idx)
@@ -164,10 +155,6 @@ class HotspotVisualizer:
     
     def plot_hotspot_heatmap(self, timestep_idx=-1, bins=50):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         x, y, z, ke_values, is_hotspot = self.analyzer.get_spatial_energy_distribution(timestep_idx)
         hotspot_mask = is_hotspot > 0

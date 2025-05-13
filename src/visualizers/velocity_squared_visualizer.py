@@ -13,8 +13,6 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_distribution(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
@@ -64,8 +62,6 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_3d(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         if group is not None and group != 'all':
@@ -90,8 +86,6 @@ class VelocitySquaredVisualizer:
     
     def plot_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         data = self.parser.get_data()[timestep_idx]
         if group is not None and group != 'all':
@@ -122,8 +116,6 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
         x, y, z = self.parser.get_atoms_spatial_coordinates(data)
@@ -174,8 +166,6 @@ class VelocitySquaredVisualizer:
     
     def plot_temperature_gradient(self, timestep_idx=-1, axis='z'):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         current_timestep = timesteps[timestep_idx]
         bin_centers, bin_temps = self.analyzer.calculate_temperature_gradient(timestep_idx, axis)
         plt.figure(figsize=(12, 8))

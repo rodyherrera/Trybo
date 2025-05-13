@@ -28,10 +28,6 @@ class VonmisesVisualizer:
 
     def plot_stress_heatmaps(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
@@ -65,10 +61,6 @@ class VonmisesVisualizer:
 
     def plot_stress_distribution(self, timestep_idx=-1):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         stress = data[:, 5]
         current_timestep = timesteps[timestep_idx]
@@ -120,10 +112,6 @@ class VonmisesVisualizer:
 
     def plot_stress_3d(self, timestep_idx=-1, group=None, percentile_threshold=None):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 
@@ -162,10 +150,6 @@ class VonmisesVisualizer:
 
     def plot_stress_by_layer(self, timestep_idx=-1, axis='z', layers_to_create=10):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-
         data = self.parser.get_data()[timestep_idx]
         current_timestep = timesteps[timestep_idx]
 

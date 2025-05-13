@@ -34,9 +34,6 @@ class PTMAnalyzer:
     
     def get_structure_distribution(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         
         ptm_data = self.parser.get_analysis_data('ptm', timestep_idx)
         structure_types = ptm_data[0].astype(int)
@@ -54,8 +51,6 @@ class PTMAnalyzer:
     
     def get_rmsd_statistics(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         ptm_data = self.parser.get_analysis_data('ptm', timestep_idx)
         rmsd_values = ptm_data[1]
 

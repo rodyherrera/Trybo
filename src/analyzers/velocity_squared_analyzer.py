@@ -15,8 +15,6 @@ class VelocitySquaredAnalyzer:
     
     def get_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
         data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
@@ -48,8 +46,6 @@ class VelocitySquaredAnalyzer:
 
     def get_temperature_statistics(self, timestep_idx=-1, group=None):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
         velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
         data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
@@ -68,9 +64,6 @@ class VelocitySquaredAnalyzer:
 
     def calculate_temperature_gradient(self, timestep_idx=-1, axis='z', n_bins=20):
         timesteps = self.parser.get_timesteps()
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)

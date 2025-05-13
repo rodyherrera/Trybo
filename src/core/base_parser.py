@@ -113,9 +113,6 @@ class BaseParser(ABC):
         if analysis_type not in self._analysis_column_map:
             raise ValueError(f'Analysis type "{analysis_type}" not found in headers: {self._headers}')
         
-        if timestep_idx < 0:
-            timestep_idx = len(self._data) + timestep_idx
-        
         column_idx = self._analysis_column_map[analysis_type]
 
         if isinstance(column_idx, list):
@@ -169,8 +166,6 @@ class BaseParser(ABC):
         if not self._is_parsed:
             self.parse()
         if timestep_idx is not None:
-            if timestep_idx < 0:
-                timestep_idx = len(self._data) + timestep_idx
             return self._data[timestep_idx]
         return self._data
     

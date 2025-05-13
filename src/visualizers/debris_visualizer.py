@@ -30,10 +30,6 @@ class DebrisVisualizer:
 
     def plot_cluster_size_distribution(self, timestep_idx=-1, min_size=2, log_scale=True):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         sizes, counts = self.analyzer.get_cluster_size_distribution(timestep_idx, min_size)
 
@@ -67,10 +63,6 @@ class DebrisVisualizer:
 
     def plot_3d_cluster_visualization(self, timestep_idx=-1, min_size=5, max_clusters=10):
         timesteps = self.parser.get_timesteps()
-
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-
         current_timestep = timesteps[timestep_idx]
         cluster_positions, cluster_sizes, atom_coords = self.analyzer.get_cluster_spatial_data(timestep_idx, min_size)
         if not cluster_positions:
@@ -103,10 +95,6 @@ class DebrisVisualizer:
     
     def plot_2d_projections(self, timestep_idx=-1, min_size=5, max_clusters=10):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         cluster_positions, cluster_sizes, atom_coords = self.analyzer.get_cluster_spatial_data(timestep_idx, min_size)
         if not cluster_positions:
@@ -153,10 +141,6 @@ class DebrisVisualizer:
 
     def plot_largest_clusters_info(self, timestep_idx=-1, n=5):
         timesteps = self.parser.get_timesteps()
-        
-        if timestep_idx < 0:
-            timestep_idx = len(timesteps) + timestep_idx
-        
         current_timestep = timesteps[timestep_idx]
         top_clusters = self.analyzer.get_largest_clusters(timestep_idx, n)
         if not top_clusters:
