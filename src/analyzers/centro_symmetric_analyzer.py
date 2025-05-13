@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
+from utilities.analyzer import get_data_from_coord_axis
 import numpy as np
 
 class CentroSymmetricAnalyzer:

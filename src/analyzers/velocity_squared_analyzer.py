@@ -1,5 +1,5 @@
 from core.base_parser import BaseParser
-from utilities.analyzer import get_data_from_coord_axis, get_atom_group_indices
+from utilities.analyzer import get_data_from_coord_axis
 import numpy as np
 
 class VelocitySquaredAnalyzer:
@@ -14,7 +14,6 @@ class VelocitySquaredAnalyzer:
         return velocity_squared * self.metal_units_conversion
     
     def get_hot_spots(self, timestep_idx=-1, threshold_percentile=95, group=None):
-        timesteps = self.parser.get_timesteps()
         velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
         data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':
@@ -28,7 +27,6 @@ class VelocitySquaredAnalyzer:
     
     def get_temperature_evolution(self, group=None):
         timesteps = self.parser.get_timesteps()
-        all_data = self.parser.get_data()
         average_temperature = []
         max_temperature = []
         min_temperature = []
@@ -45,7 +43,6 @@ class VelocitySquaredAnalyzer:
         return timesteps, average_temperature, max_temperature, min_temperature
 
     def get_temperature_statistics(self, timestep_idx=-1, group=None):
-        timesteps = self.parser.get_timesteps()
         velocity_squared = self.parser.get_analysis_data('velocity_squared', timestep_idx)
         data = self.parser.get_data(timestep_idx)
         if group is not None and group != 'all':

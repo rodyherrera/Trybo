@@ -1,6 +1,5 @@
 import numpy as np
 from core.base_parser import BaseParser
-from utilities.analyzer import get_atom_group_indices
 
 class PTMAnalyzer:
     def __init__(self, parser: BaseParser):

@@ -3,7 +3,6 @@ from core.base_parser import BaseParser
 from matplotlib.colors import ListedColormap
 import matplotlib.pyplot as plt
 import numpy as np
-import seaborn as sns
 
 class CommonNeighborAnalysisVisualizer:
     def __init__(self, parser: BaseParser):
