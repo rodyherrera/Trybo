@@ -1,66 +1,90 @@
 from abc import ABC
-from typing import List, Dict, Any, Union, Optional
+from typing import List, Dict, Any, Union
+from functools import lru_cache
+from concurrent.futures import ProcessPoolExecutor
+from numba import njit
 import numpy as np
 import gc
+import mmap
 
 class BaseParser(ABC):
+    # For reduce footprint
+    __slots__ = (
+        'filename',
+        '_mm',
+        '_timesteps',
+        '_timestep_atom_info',
+        '_headers',
+        '_atoms_spatial_coordinates_indices',
+        '_analysis_column_map',
+        '_metadata',
+        '_box_bounds'
+    )
+
     def __init__(self, filename: str):
         self.filename = filename
+        file = open(self.filename, 'r+b')
+        self._mm = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
 
-        self._timesteps = []
-        self._data = []
-        self._headers = []
-        self._is_parsed = False
-        # Para parseo selectivo
-        self._timestep_positions = {}
-        self._file_positions = []
-        # Simulation box dimensions
+        self._timesteps: List[int] = []
+        self._timestep_atom_info: Dict[int, tuple[int, int]] = {}
+
+        self._headers: List[str] = []
+        self._atoms_spatial_coordinates_indices: List[int] = []
+        self._analysis_column_map: Dict[str, Union[int, List[int]]] = {}
+
+        self._metadata: Dict[str, Any] = {}
         self._box_bounds = None
-        # Metadata from the dump file
-        self._metadata = {}
 
-        # The x, y, and z values ​​in the LAMMPS dump files.
-        # ITEM: ATOMS id type x y z [...]
-        self._atoms_spatial_coordinates_indices = []
-
-        # Mapping between analysis types and column indices
-        self._analysis_column_map = {}
-        
-        # Indexing the file at initialization for better performance
         self._index_file()
 
     def _index_file(self):
-        with open(self.filename, 'r') as file:
-            position = file.tell()
-            line = file.readline()
-            
-            while line:
-                if 'ITEM: TIMESTEP' in line:
-                    # Read the timestep number
-                    timestep = int(file.readline().strip())
-                    # Save the position where this timestep's data begins
-                    self._timestep_positions[timestep] = position
-                    self._timesteps.append(timestep)
-                    
-                    # Skip ahead to find atoms data
-                    while line and 'ITEM: ATOMS' not in line:
-                        line = file.readline()
-                        if not line:
-                            break
-                    
-                    if line and 'ITEM: ATOMS' in line:
-                        # Save the headers once
-                        if not self._headers:
-                            self._headers = line.split()[2:]
-                            self._parse_atoms_spatial_coordinates_indices()
-                            self._create_analysis_column_map()
-                            self._is_parsed = True
-                
-                position = file.tell()
-                line = file.readline()
-        
+        size = self._mm.size()
+        offset = 0
+        while True:
+            position_timestep = self._mm.find(b'ITEM: TIMESTEP', offset)
+            if position_timestep < 0:
+                break
+            self._mm.seek(position_timestep)
+            self._mm.readline()
+            timestep_line = self._mm.readline()
+            try:
+                timestep = int(timestep_line.strip())
+            except ValueError:
+                break
+            self._timesteps.append(timestep)
+            position_atoms = self._mm.find(b'ITEM: ATOMS', self._mm.tell())
+            if position_atoms < 0:
+                break
+            self._mm.seek(position_atoms)
+            # ITEM: ATOMS id type x y z ...
+            atom_header = self._mm.readline()
+            if not self._headers:
+                parts = atom_header.split()[2:]
+                self._headers = [p.decode() for p in parts]
+                self._parse_atoms_spatial_coordinates_indices()
+                self._create_analysis_column_map()
+            data_start = self._mm.tell()
+            next_item = self._mm.find(b'ITEM:', data_start)
+            data_end = next_item if next_item >= 0 else size
+            self._timestep_atom_info[timestep] = (data_start, data_end)
+            offset = data_end
+
         if not self._headers:
             raise ValueError('No headers were found in the file. Check the format.')
+        
+    @lru_cache(maxsize=8)
+    def _load_timestep_data(self, timestep: int) -> np.ndarray:
+        if timestep not in self._timestep_atom_info:
+            raise ValueError(f'Timestep {timestep} not found in file.')
+        start, end = self._timestep_atom_info[timestep]
+        segment = self._mm[start:end]
+        flat = np.fromstring(segment, sep=' ')
+        n_cols = len(self._headers)
+        try:
+            return flat.reshape(-1, n_cols)
+        except ValueError:
+            raise ValueError(f'Data reshape error for timestep {timestep}: {flat.size} values for {n_cols} columns.')
 
     def _parse_atoms_spatial_coordinates_indices(self):
         try:
@@ -75,39 +99,9 @@ class BaseParser(ABC):
         self._atoms_spatial_coordinates_indices = [x_idx, y_idx, z_idx]
 
     def _load_all_timesteps(self):
-        self._data = []
-        for timestep in self._timesteps:
-            self._data.append(self._load_timestep_data(timestep))
-        return self._timesteps, self._data, self._headers
-
-    def _load_timestep_data(self, timestep):
-        if timestep not in self._timestep_positions:
-            if isinstance(timestep, int) and timestep < 0:
-                try:
-                    actual_timestep = self._timesteps[timestep]
-                    return self._load_timestep_data(actual_timestep)
-                except IndexError:
-                    raise ValueError(f'Invalid timestep index: {timestep}')
-            else:
-                raise ValueError(f'Timestep {timestep} not found in file')
-        with open(self.filename, 'r') as file:
-            file.seek(self._timestep_positions[timestep])
-            # Skip the TIMESTEP line and timestep value
-            file.readline()
-            file.readline()
-            # Skip to the ATOMS section
-            line = file.readline()
-            while line and 'ITEM: ATOMS' not in line:
-                line = file.readline()
-            if not line or 'ITEM: ATOMS' not in line:
-                raise ValueError(f'Could not find ATOMS section for timestep {timestep}')
-            atoms_data = []
-            line = file.readline()
-            while line and 'ITEM:' not in line:
-                values = [float(value) for value in line.split()]
-                atoms_data.append(values)
-                line = file.readline()
-            return np.array(atoms_data)
+        with ProcessPoolExecutor() as executor:
+            data_list = list(executor.map(self._load_timestep_data, self._timesteps))
+        return data_list
 
     def _create_analysis_column_map(self):
         analysis_headers = {
@@ -124,12 +118,9 @@ class BaseParser(ABC):
 
         for analysis_type, header in analysis_headers.items():
             if isinstance(header, list):
-                indices = []
-                for h in header:
-                    if h in self._headers:
-                        indices.append(self._headers.index(h))
-                if indices:
-                    self._analysis_column_map[analysis_type] = indices
+                idxs = [self._headers.index(h) for h in header if h in self._headers]
+                if idxs:
+                    self._analysis_column_map[analysis_type] = idxs
             elif header in self._headers:
                 self._analysis_column_map[analysis_type] = self._headers.index(header)
         print(f'Analysis column map created: {self._analysis_column_map}')
@@ -152,22 +143,13 @@ class BaseParser(ABC):
         return timestep_data[:, column_idx]
     
     def _get_timestep_data(self, timestep_idx):
-        if timestep_idx < len(self._data):
-            timestep_data = self._data[timestep_idx]
-            if timestep_data is not None and len(timestep_data) > 0:
-                return timestep_data
-        
+        if timestep_idx < 0:
+            timestep_idx = len(self._timesteps) + timestep_idx
         timestep = self._timesteps[timestep_idx]
-        timestep_data = self._load_timestep_data(timestep)
-
-        while len(self._data) <= timestep_idx:
-            self._data.append(None)
-        
-        self._data[timestep_idx] = timestep_data
-        return timestep_data
+        return self._load_timestep_data(timestep)
 
     def clear_data_cache(self):
-        self._data = []
+        self._load_timestep_data.cache_clear()
         gc.collect()
 
     def get_atom_group_indices(self, data):
@@ -180,25 +162,14 @@ class BaseParser(ABC):
         Returns:
             dict: Dictionary with indices for each group (lower_plane, upper_plane, nanoparticle, all)
         '''
-        # Get Z coordinates
-        x, y, z = self.get_atoms_spatial_coordinates(data)
-        # Calculate Z thresholds
-        z_min = np.min(z)
-        z_max = np.max(z)
-        # Lower plane up to 2.5 Å
-        z_threshold_lower = z_min + 2.5
-        # Upper plane from z_max - 2.5 Å
-        z_threshold_upper = z_max - 2.5
-        # Identify groups based on Z position
-        lower_plane_mask = z <= z_threshold_lower
-        upper_plane_mask = z >= z_threshold_upper
-        nanoparticle_mask = ~(lower_plane_mask | upper_plane_mask)
-        # Return dictionary with indices for each group
+        _, _, z = self.get_atoms_spatial_coordinates(data)
+        lower, upper = BaseParser._njit_group_indices(z)
+        nanoparticle = ~(lower | upper)
         return {
-            'lower_plane': np.where(lower_plane_mask)[0],
-            'upper_plane': np.where(upper_plane_mask)[0],
-            'nanoparticle': np.where(nanoparticle_mask)[0],
-            'all': np.arange(len(data))
+            'lower_plane': np.where(lower)[0],
+            'upper_plane': np.where(upper)[0],
+            'nanoparticle': np.where(nanoparticle)[0],
+            'all': np.arange(data.shape[0])
         }
         
     def get_atoms_spatial_coordinates(self, data):
@@ -209,27 +180,17 @@ class BaseParser(ABC):
         return x, y, z
     
     def get_data(self, timestep_idx = None) -> np.ndarray:
-        if not self._is_parsed:
-            self._index_file()
+        if timestep_idx is None:
+            print('WARNING: Loading all timesteps into memory. This may consume a lot of RAM.')
+            return self._load_all_timesteps()
         
-        if timestep_idx is not None:
-            if isinstance(timestep_idx, int):
-                if timestep_idx < 0:
-                    timestep_idx = len(self._timesteps) + timestep_idx
-                return self._get_timestep_data(timestep_idx)
-            else:
-                # Handle timestep value instead of index
-                for idx, timestep in enumerate(self._timesteps):
-                    if timestep == timestep_idx:
-                        return self._get_timestep_data(idx)
-                raise ValueError(f"Timestep {timestep_idx} not found")
-                
-        # Load all data if requested (but warn about memory usage)
-        if not self._data or len(self._data) < len(self._timesteps):
-            print("WARNING: Loading all timesteps into memory. This may consume a lot of RAM.")
-            self._load_all_timesteps()
-            
-        return self._data
+        if isinstance(timestep_idx, int):
+            return self._get_timestep_data(timestep_idx)
+    
+        if timestep_idx in self._timesteps:
+            return self._load_timestep_data(timestep_idx)
+
+        raise ValueError(f'Timestep {timestep_idx} not found')
     
     def get_headers(self) -> List[str]:
         return self._headers
@@ -237,31 +198,37 @@ class BaseParser(ABC):
     def get_timesteps(self) -> Dict[str, Any]:
         return self._timesteps
     
-    def get_column_data(self, column_name: str, timestep_idx=-1, data=None) -> np.ndarray:
-        try:
-            column_idx = self._headers.index(column_name)
-        except ValueError:
-            raise ValueError(f"Column '{column_name}' not found in headers: {self._headers}")
-        if data is not None:
-            return data[:, column_idx]
-        if timestep_idx < 0:
-            timestep_idx = len(self._data) + timestep_idx
-        return self._data[timestep_idx][:, column_idx]
+    def get_column_data(self, column_name: str, timestep_idx: int = -1) -> np.ndarray:
+        if column_name not in self._headers:
+            raise ValueError(f'Column {column_name} does not exists in headers.')
+        column = self._headers.index(column_name)
+        return self._get_timestep_data(timestep_idx)[:, column]
 
     def get_metadata(self) -> Dict[str, Any]:
         return self._metadata
     
     def get_atom_types(self, timestep_idx=-1) -> np.ndarray:
-        try:
-            type_idx = self._headers.index('type')
-        except ValueError:
-            raise ValueError('Atom type information not found in headers')
-        if timestep_idx < 0:
-            timestep_idx = len(self._data) + timestep_idx
-        return self._data[timestep_idx][:, type_idx].astype(int)
+        column = self._headers.index('type')
+        return self._get_timestep_data(timestep_idx)[:, col].astype(np.int64)
 
-    def get_atom_count(self, timestep_idx=-1) -> int:
-        if timestep_idx < 0:
-            timestep_idx = len(self._data) + timestep_idx
-        return len(self._data[timestep_idx])
+    def get_atom_count(self, timestep_idx: int = -1) -> int:
+        return self._get_timestep_data(timestep_idx).shape[0]
     
+    @staticmethod
+    @njit
+    def _njit_group_indices(z: np.ndarray):
+        z_min = z.min()
+        z_max = z.max()
+        n = z.shape[0]
+        lower = np.empty(n, np.bool_)
+        upper = np.empty(n, np.bool_)
+        for i in range(n):
+            lower[i] = z[i] <= z_min + 2.5
+            upper[i] = z[i] >= z_max - 2.5
+        return lower, upper
+    
+    def __del__(self):
+        try:
+            self._mm.close()
+        except Exception:
+            pass

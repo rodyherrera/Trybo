@@ -53,7 +53,7 @@ run:
         # stopping tolerance for force (force units)
         ftol: 1.0e-8
     equilibration_steps: 20000
-    production_steps: 1000000
+    production_steps: 10000000
 
 neighbor:
     delay: 4
