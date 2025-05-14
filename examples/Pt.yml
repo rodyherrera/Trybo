@@ -1,0 +1,76 @@
+simulation:
+    name: 'Platinum Nanoparticle Wear Analysis'
+    description: 'Simulation of Platinum nanoparticle wear'
+    dump_frequency: 500
+    analysis_dump_frequency: 1000
+    timesteps: 5000
+    timesteps_size: 0.001
+    restart_frequency: 50000
+    thermo_frequency: 1000
+    approach_rate: 0.00005
+
+approach:
+    approach_rate: 0.0001
+    relaxation_steps: 2000
+
+system:
+    temperature: 300.0
+    pressure: 1.0
+    box_dimensions: [0, 25, 0, 25, 0, 25]
+    material:
+        type: Pt
+        lattice: 3.92
+        potential: 'Pt_u3.eam'
+        mass: 195.08
+
+regions:
+    lower_plane: [2.5, 22.5, 2.5, 22.5, 0, 2.5]
+    upper_plane: [2.5, 22.5, 2.5, 22.5, 22.5, 25]   
+    nanoparticle:  [12.5, 12.5, 12.5, 9.5]
+
+dynamics:
+    thermostat:
+        upper_plane:
+            temperature: 300.0
+            damping: 100.0
+            seed: 48279
+        lower_plane:
+            temperature: 300.0
+            damping: 100.0
+            seed: 12345
+        nanoparticle:
+            temperature: 300.0
+            damping: 10.0
+            seed: 23456
+    oscillation:
+        amplitude: 10
+        period: 50000
+        damping: 0.0
+
+run:
+    minimization:
+        etol: 1.0e-6
+        ftol: 1.0e-8
+    equilibration_steps: 20000
+    production_steps: 10000000
+
+neighbor:
+    delay: 4
+    every: 2
+    check: 'yes'
+    page: 500000
+    one: 50000
+    binsize: 3.0
+
+thresholds:
+    deformation: 8.0
+    hotspot_factor: 4.0
+    cluster_cutoff: 3.0
+    coordination_cutoff: 3.3
+    cna_cutoff: 3.3
+    ptm_cutoff: 0.15
+
+oscillation:
+    amplitude: 10.0
+    period: 10000
+    damp_factor: 0.0

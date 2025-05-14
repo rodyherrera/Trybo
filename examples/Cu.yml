@@ -21,7 +21,8 @@ system:
     material:
         type: Cu
         lattice: 3.615
-        potential: 'potentials/Cu_u3.eam'
+        # It will be downloaded automatically if it does not exist
+        potential: 'Cu_u3.eam'
         mass: 63.546
 
 regions:

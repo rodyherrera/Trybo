@@ -111,6 +111,7 @@ class YamlConfig:
             raise RuntimeError(f"The potential was not found in the repository. There's nothing I can do for you. Download the potential you want to use and specify the absolute path to the file.")
         
         potential_file_path = f'{POTENTIALS_DIR}/{potential_filename}'
+        self.config['system']['material']['potential'] = potential_file_path
 
         with open(potential_file_path, 'wb') as potential_file:
             potential_file.write(req.content)

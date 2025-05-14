@@ -51,6 +51,11 @@ pair_coeff * * {{ system.material.potential }}
 neigh_modify delay {{ neighbor.delay }} every {{ neighbor.every }} check {{ neighbor.check }} page {{ neighbor.page }} one {{ neighbor.one }} binsize {{ neighbor.binsize }}
 delete_atoms overlap 0.01 nanoparticle_group upper_plane_group
 
+# Energy minimization (to relax initial structure)
+thermo_modify lost ignore
+min_style cg
+minimize {{ run.minimization.etol }} {{ run.minimization.ftol }} 5000 50000
+
 # Save nanoparticle IDs and initial positions
 dump nanoparticle_init nanoparticle_group custom 1 ${output_directory}/nanoparticle_init.txt id type x y z
 run 0
@@ -147,12 +152,6 @@ variable normal_load equal ${fz_contact}
 print "Contact Detected: Fz = ${fz_contact} eV/Angstrom at Z position = ${current_z_upper}, Fz change = ${fz_change}"
 fix contact_out all print 1 "${fz_contact}" file ${output_directory}/contact_force.txt screen no
 
-# Apply constant normal force using addforce
-fix normal_load upper_plane_group addforce 0.0 0.0 -${normal_load}
-
-# Continue with your oscillatory movement for friction study
-fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NULL NULL NULL
-
 variable fz_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[3]
 variable fx_nanoparticle_upper_plane equal c_normal_force_nanoparticle_upper_plane[1]
 
@@ -164,6 +163,9 @@ variable damp_factor equal {{ dynamics.oscillation.damping }}
 variable x_pos equal v_amplitude*sin(v_omega*step)*(1-v_damp_factor*sin(v_omega*step)*sin(v_omega*step))
 variable y_pos equal 0.0
 variable z_pos equal 0.0
+
+# Apply constant normal force using addforce
+fix normal_load upper_plane_group addforce 0.0 0.0 -${normal_load}
 
 # Localized and cyclical wear:
 fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NULL NULL NULL
@@ -296,11 +298,6 @@ thermo_style custom step time atoms &
     v_coefficient_friction c_center_symmetric_average
 
 thermo {{ simulation.thermo_frequency }}
-
-# Energy minimization (to relax initial structure)
-thermo_modify lost ignore
-min_style cg
-minimize {{ run.minimization.etol }} {{ run.minimization.ftol }} 5000 50000
 
 restart {{ simulation.restart_frequency }} ${output_directory}/restart.*.binary
 
