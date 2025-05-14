@@ -1,4 +1,5 @@
 from jinja2 import Environment, FileSystemLoader
+from typing import Optional, Union
 import os
 import yaml
 import datetime
@@ -95,26 +96,34 @@ class YamlConfig:
         self.analysis_output_path = analysis_path
         
         return analysis_path
+
+    def _extract_filename_from_potential_path(self):
+        potential = self.config['system']['material']['potential']
+        filename = os.path.basename(potential)
+        return filename
     
+    def _fetch_potential_from_lammps_repo(self):
+        potential_filename = self._extract_filename_from_potential_path()
+        print(f'Searching for the potential "{potential_filename}" in the LAMMPS repository...')
+
+        req = requests.get(f'{LAMMPS_BASE_POTENTIALS_URL}/{potential_filename}')
+        if req.status_code != 200:
+            raise RuntimeError(f"The potential was not found in the repository. There's nothing I can do for you. Download the potential you want to use and specify the absolute path to the file.")
+        
+        potential_file_path = f'{POTENTIALS_DIR}/{potential_filename}'
+
+        with open(potential_file_path, 'wb') as potential_file:
+            potential_file.write(req.content)
+
+        print(f'Potential downloaded and saved to {potential_file_path} successfully.')
+        
     def check_material_potential(self):
         potential = self.config['system']['material']['potential']
         if os.path.isfile(potential):
             print(f'Using {potential} potential provided from configuration.')
             return
-        path_parts = potential.split('/')
-        filename = path_parts[-1]
-        print(f'{potential} not found, is it a relative path? Searching for the potential "{filename}" in the LAMMPS repository...')
-        req = requests.get(f'{LAMMPS_BASE_POTENTIALS_URL}/{filename}')
-        # Check if it's downloadable
-        content_type = req.headers['content-type'].lower()
-        is_downloadable = not ('text' in content_type or 'html' in content_type)
-        if req.status_code != 200 or is_downloadable:
-            print(f"The potential was not found in the repository. There's nothing I can do for you. Download the potential you want to use and specify the absolute path to the file.")
-            sys.exit(1)
-        potential_file_path = f'{POTENTIALS_DIR}/{filename}'
-        with open(potential_file_path, 'wb') as potential_file:
-            potential_file.write(req.content)
-        print(f'Potential downloaded and saved to {potential_file_path} successfully.')
+        
+        self._fetch_potential_from_lammps_repo()
 
     def render_template(self):
         if not self.config:
