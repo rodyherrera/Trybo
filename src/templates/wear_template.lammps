@@ -186,7 +186,7 @@ variable coef_diff equal v_coefficient_friction-1.0
 variable coef_shift equal 0.5*(v_coef_diff+sqrt(v_coef_diff*v_coef_diff+0.0001))
 variable coefficient_friction_capped equal v_coefficient_friction-v_coef_shift
 
-fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficient_friction_capped file ${output_directory}/friction_data.txt
+fix friction_output all ave/time 100 10 1000 v_coefficient_friction v_coefficient_friction_capped 
 
 # Identify structural defects (direct indicator of wear)
 compute center_symmetric all centro/atom 12
@@ -227,11 +227,11 @@ variable total_energy atom c_ke_mobile+c_pe_mobile
 
 # Monitor the number of atoms in the nanoparticle cluster over time
 variable contact_count equal "count(nanoparticle_group)"
-fix contact_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} v_contact_count file ${output_directory}/contact_count.txt
+fix contact_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} v_contact_count
 
 # Radial Distribution Function (RDF) for analyzing atomic structure
 compute radial_distribution_function all rdf 100 1 1
-fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] file ${output_directory}/radial_distribution_function_output.txt mode vector
+fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] mode vector
 
 # Calculate the average and maximum values of the central symmetry parameter
 compute center_symmetric_max all reduce max c_center_symmetric
@@ -245,7 +245,7 @@ compute velocity_squared_nanoparticle_average nanoparticle_group reduce ave v_ve
 variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*25.464
 
 # Periodically record indicators related to nanoparticle wear
-fix wear_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent file ${output_directory}/wear_data.txt
+fix wear_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent
 
 # Material Transfer Analysis between Top and Bottom Surfaces
 group initial_lower_group region lower_plane
@@ -257,14 +257,14 @@ group current_upper_group dynamic all region upper_plane every 5000
 variable transferred_to_lower_group equal count(current_lower_group)-count(initial_lower_group)
 variable transferred_to_upper_group equal count(current_upper_group)-count(initial_upper_group)
 
-fix material_transfer all ave/time 5000 1 5000 v_transferred_to_lower_group v_transferred_to_upper_group file ${output_directory}/material_transfer.txt
+fix material_transfer all ave/time 5000 1 5000 v_transferred_to_lower_group v_transferred_to_upper_group
 
 # Identify hot spots caused by friction, impact, and deformation
 compute ke_hotspots all ke/atom
 variable hot_threshold equal "{{ thresholds.hotspot_factor }}*8.617e-5*{{ system.temperature }}"
 variable is_hotspot atom "c_ke_hotspots > v_hot_threshold"
 compute hotspots_count all reduce sum v_is_hotspot
-fix hotspot_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_hotspots_count file ${output_directory}/hotspots_count.txt
+fix hotspot_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_hotspots_count
 
 # Dump para visualizar puntos calientes
 # dump hotspots all custom ${analysis_related_dump_frequency} ${output_directory}/hotspots.dump id type x y z c_ke_hotspots v_is_hotspot
@@ -277,17 +277,25 @@ compute coord all coord/atom cutoff {{ thresholds.coordination_cutoff }}
 compute coord_avg all reduce ave c_coord
 compute coord_min all reduce min c_coord
 compute coord_max all reduce max c_coord
-fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max file ${output_directory}/coordination_stats.txt
+fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max
 
 # Trajectory visualization with structure identifiers using PTM
 compute ptm all ptm/atom fcc {{ thresholds.ptm_cutoff }}
 # dump ptm_dump all custom ${analysis_related_dump_frequency} ${output_directory}/ptm.dump id type x y z c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6]
 
+fix global_stats all ave/time ${analysis_related_dump_frequency} 1 ${analysis_related_dump_frequency} &
+    c_center_symmetric_average c_center_symmetric_max c_center_symmetric_sumsq &
+    c_vonmises_average c_vonmises_max &
+    v_defect_percent v_transferred_to_upper_group v_transferred_to_lower_group &
+    v_fx_upper_plane v_initial_z_upper v_total_struct_atoms &
+    v_center_symmetric_sum v_center_symmetric_std file ${output_directory}/stats.out
+
 dump main_dump all custom ${dump_frequency} ${output_directory}/trajectory.lammpstrj id type x y z fx fy fz
 dump analysis_dump all custom ${analysis_related_dump_frequency} ${output_directory}/analysis.lammpstrj id type x y z &
     c_center_symmetric c_cna v_atoms_stress v_velocity_squared_atom c_cluster &
     c_ke_hotspots v_is_hotspot c_coord c_ptm[1] c_ptm[2] c_ptm[3] c_ptm[4] c_ptm[5] c_ptm[6] &
-    c_ke_mobile c_pe_mobile v_total_energy
+    c_ke_mobile c_pe_mobile v_total_energy &
+    c_disp_nanoparticle[*]
 
 # dump energy_dump mobile_group custom ${analysis_related_dump_frequency} ${output_directory}/energy.dump id type x y z c_ke_mobile c_pe_mobile v_total_energy
 

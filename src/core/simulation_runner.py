@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict
 import os
 import subprocess
 import datetime
@@ -11,8 +11,7 @@ class SimulationRunner:
         self,
         simulation_file: str,
         lammps_executable = './lammps/build/lmp',
-        log_level = logging.INFO,
-        optimize_input = True
+        log_level = logging.INFO
     ):
         '''
         Initialize the SimulationRunner with the specified parameters.
@@ -21,15 +20,12 @@ class SimulationRunner:
             simulation_file: Path to the LAMMPS input file
             lammps_executable: Path to the LAMMPS executable
             log_level: Logging level for output verbosity
-            profile: Whether to enable performance profiling
-            optimize_input: Whether to automatically optimize the input file
         '''
         self.logger = logging.getLogger('SimulationRunner')
         self._setup_logging(log_level)
         
         self.simulation_file = simulation_file
         self.lammps_executable = lammps_executable
-        self.optimize_input = optimize_input
         
         self.start_time = 0
         self.end_time = 0
@@ -172,155 +168,16 @@ class SimulationRunner:
         elif cores >= 8:
             params['mpi_processes'] = 2
         
-        analysis = self.analyze_input_file()
-        if analysis['size'] == 'large':
-            params['split'] = 0.8
-        elif analysis['size'] == 'small':
-            params['split'] = 1.0
+        params['split'] = 1.0
         
         self.logger.info(f'Optimal parameters calculated:')
         self.logger.info(f'  - TPA: {params["tpa"]}')
         self.logger.info(f'  - Binsize: {params["binsize"]}')
         self.logger.info(f'  - Split: {params["split"]}')
         self.logger.info(f'  - MPI processes: {params["mpi_processes"]}')
-        
+
         return params
-    
-    def analyze_input_file(self) -> Dict:
-        '''
-        Analyze input file to determine optimization opportunities.
         
-        Parses the LAMMPS input file to extract key settings such as timestep,
-        pair style, neighbor settings, run length, and system size estimation.
-        
-        Returns:
-            Dict: Analysis results containing identified settings
-        '''
-        analysis = {
-            'size': 'medium',
-            'timestep': 0.001,
-            'pair_style': 'unknown',
-            'neighbor_settings': {},
-            'run_steps': 0
-        }
-        
-        try:
-            with open(self.simulation_file, 'r') as f:
-                content = f.read()
-            
-            timestep_match = re.search(r'timestep\s+(\S+)', content)
-            if timestep_match:
-                analysis['timestep'] = float(timestep_match.group(1))
-            
-            pair_style_match = re.search(r'pair_style\s+(\S+)', content)
-            if pair_style_match:
-                analysis['pair_style'] = pair_style_match.group(1)
-            
-            neigh_skin_match = re.search(r'neighbor\s+(\S+)\s+(\S+)', content)
-            if neigh_skin_match:
-                analysis['neighbor_settings']['skin'] = float(neigh_skin_match.group(1))
-                analysis['neighbor_settings']['style'] = neigh_skin_match.group(2)
-            
-            run_match = re.search(r'run\s+(\d+)', content)
-            if run_match:
-                analysis['run_steps'] = int(run_match.group(1))
-            
-            atoms_match = re.search(r'create_atoms\s+\d+\s+\w+\s+(\d+)', content)
-            if atoms_match:
-                atoms = int(atoms_match.group(1))
-                if atoms < 10000:
-                    analysis['size'] = 'small'
-                elif atoms < 100000:
-                    analysis['size'] = 'medium'
-                else:
-                    analysis['size'] = 'large'
-            
-            region_match = re.search(r'region\s+\w+\s+\w+\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)\s+(\S+)', content)
-            if region_match and not atoms_match:
-                try:
-                    x1, x2 = float(region_match.group(1)), float(region_match.group(2))
-                    y1, y2 = float(region_match.group(3)), float(region_match.group(4))
-                    z1, z2 = float(region_match.group(5)), float(region_match.group(6))
-                    
-                    vol = abs((x2-x1) * (y2-y1) * (z2-z1))
-                    if vol < 1000:
-                        analysis['size'] = 'small'
-                    elif vol < 100000:
-                        analysis['size'] = 'medium'
-                    else:
-                        analysis['size'] = 'large'
-                except:
-                    pass
-            
-            return analysis
-        except Exception as e:
-            self.logger.warning(f'Could not analyze input file: {str(e)}')
-            return analysis
-    
-    def optimize_input_file(self, analysis: Dict) -> str:
-        '''
-        Create an optimized version of the input file based on analysis.
-        
-        Modifies the original input file to add performance optimizations
-        based on analysis results and detected hardware capabilities.
-        
-        Args:
-            analysis: Dictionary containing input file analysis results
-            
-        Returns:
-            str: Path to the optimized input file, or the original if optimization fails
-        '''
-        if not os.path.exists(self.simulation_file) or not self.optimize_input:
-            return self.simulation_file
-        
-        try:
-            with open(self.simulation_file, 'r') as f:
-                content = f.readlines()
-            
-            optimized_file = f"{os.path.splitext(self.simulation_file)[0]}_optimized.in"
-            with open(optimized_file, 'w') as f:
-                f.write('# Optimized input file generated by SimulationRunner\n')
-                
-                neighbor_added = False
-                thermo_added = False
-                balance_added = False
-                
-                for line in content:
-                    line_stripped = line.strip()
-                    if line_stripped.startswith('neighbor '):
-                        neighbor_added = True
-                        gpu_info = self.detect_gpu()
-                        if gpu_info['memory'] >= 8000:
-                            f.write('\nneighbor 2.0 bin\n')
-                        else:
-                            f.write(line)
-                    elif line_stripped.startswith('thermo '):
-                        thermo_added = True
-                        if analysis['run_steps'] > 10000:
-                            freq = max(100, analysis['run_steps'] // 100)
-                            f.write(f'thermo {freq}\n')
-                        else:
-                            f.write(line)
-                    elif analysis['size'] == 'large' and line_stripped.startswith('run ') and not balance_added:
-                        balance_added = True
-                        f.write('balance 1.0 rcb\n')
-                        f.write(line)
-                    else:
-                        f.write(line)
-                
-                if not neighbor_added:
-                    f.write('\nneighbor 2.0 bin\n')
-                
-                if not thermo_added:
-                    freq = max(100, analysis['run_steps'] // 100) if analysis['run_steps'] > 0 else 100
-                    f.write(f'thermo {freq}\n')
-            
-            self.logger.info(f'Created optimized input file: {optimized_file}')
-            return optimized_file
-        except Exception as e:
-            self.logger.warning(f'Could not optimize input file: {str(e)}')
-            return self.simulation_file
-    
     def _check_gpu_compatibility(self) -> bool:
         '''
         Check if the input file contains pair styles compatible with GPU acceleration.
@@ -409,7 +266,7 @@ class SimulationRunner:
         if params['mpi_processes'] > 1:
             env['CUDA_LAUNCH_BLOCKING'] = '0'
         
-        cores_per_mpi = max(1, (os.cpu_count() or 4) // params['mpi_processes'])
+        cores_per_mpi = max(1, (os.cpu_count() or 4 - 1) // params['mpi_processes'])
         env['OMP_NUM_THREADS'] = str(cores_per_mpi)
         
         if self._check_command_exists('taskset'):
@@ -476,48 +333,6 @@ class SimulationRunner:
         except:
             return False
     
-    def _analyze_profiling_results(self):
-        '''
-        Analyze log file for performance bottlenecks.
-        
-        Examines the LAMMPS log file to extract performance metrics
-        and identify potential bottlenecks in the simulation.
-        '''
-        log_file = 'log.lammps'
-        
-        try:
-            if os.path.exists(log_file):
-                with open(log_file, 'r') as f:
-                    log_content = f.read()
-                
-                timing_section = re.search(r'Performance: (.*?)Loop time of([^#]*)', log_content, re.DOTALL)
-                if timing_section:
-                    self.logger.info('Performance Analysis:')
-                    self.logger.info(timing_section.group(0))
-                    
-                    mflops_match = re.search(r'(\d+\.\d+) MFlops', log_content)
-                    if mflops_match:
-                        mflops = float(mflops_match.group(1))
-                        if mflops < 100:
-                            self.logger.warning('Low MFlops detected. Consider increasing TPA or using a more powerful GPU')
-                    
-                    pair_match = re.search(r'Pair\s+:\s+(\d+\.\d+)', log_content)
-                    neigh_match = re.search(r'Neigh\s+:\s+(\d+\.\d+)', log_content)
-                    comm_match = re.search(r'Comm\s+:\s+(\d+\.\d+)', log_content)
-                    
-                    if pair_match and neigh_match and comm_match:
-                        pair_time = float(pair_match.group(1))
-                        neigh_time = float(neigh_match.group(1))
-                        comm_time = float(comm_match.group(1))
-                        
-                        if neigh_time / pair_time > 0.5:
-                            self.logger.warning('Neighbor list calculation taking significant time. Consider adjusting neighbor skin distance.')
-                        
-                        if comm_time / pair_time > 0.3:
-                            self.logger.warning('Communication overhead is high. Consider reducing MPI processes or optimizing domain decomposition.')
-        except Exception as e:
-            self.logger.warning(f'Could not analyze performance results: {str(e)}')
-    
     def execute(self) -> bool:
         '''
         Execute the complete simulation workflow.
@@ -533,16 +348,9 @@ class SimulationRunner:
             if not self.check_lammps() or not self.check_input_file():
                 return False
             
-            analysis = self.analyze_input_file()
-            optimized_input = self.optimize_input_file(analysis)
-            
             original_input = self.simulation_file
-            if optimized_input != original_input:
-                self.simulation_file = optimized_input
                 
             success = self.run_simulation()
-            
-            self._analyze_profiling_results()
             
             self.simulation_file = original_input
             
@@ -553,7 +361,3 @@ class SimulationRunner:
         except Exception as e:
             self.logger.error(f'Unexpected error: {str(e)}')
             return False
-    
-        except Exception as e:
-            self.logger.error(f'Error in profiling: {str(e)}')
-            return self.run_simulation()

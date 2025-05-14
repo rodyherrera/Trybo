@@ -1,0 +1,2 @@
+# Time-averaged data for fix global_stats
+# TimeStep c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_defect_percent v_transferred_to_upper_group v_transferred_to_lower_group c_center_symmetric_sumsq v_z_upper_plane
