@@ -1,12 +1,17 @@
 simulation:
     name: 'Copper Nanoparticle Wear Analysis'
     description: 'Simulation of copper nanoparticle wear on a crystalline surface'
-    dump_frequency: 10000
-    analysis_dump_frequency: 50000
+    dump_frequency: 100
+    analysis_dump_frequency: 1000
     timesteps: 5000
     timesteps_size: 0.001
     restart_frequency: 50000
     thermo_frequency: 1000
+    approach_rate: 0.00005
+
+approach:
+    approach_rate: 0.0001
+    relaxation_steps: 2000
 
 system:
     temperature: 300.0
@@ -31,19 +36,19 @@ dynamics:
     thermostat:
         upper_plane:
             temperature: 300.0
-            damping: 1.0
+            damping: 100.0
             seed: 48279
         lower_plane:
             temperature: 300.0
-            damping: 1.0
+            damping: 100.0
             seed: 12345
         nanoparticle:
             temperature: 300.0
             damping: 10.0
             seed: 23456
     oscillation:
-        amplitude: 10.0
-        period: 25000
+        amplitude: 10
+        period: 50000
         damping: 0.0
 
 run:
@@ -73,7 +78,7 @@ thresholds:
 
 oscillation:
     amplitude: 10.0
-    period: 25000
+    period: 10000
     damp_factor: 0.0
 
 cna:

@@ -1,13 +1,17 @@
 from jinja2 import Environment, FileSystemLoader
 import os
-import sys
 import yaml
 import datetime
+import requests
+import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, '..', 'templates')
 TEMPLATE_FILE = os.path.join(TEMPLATES_DIR, 'wear_template.lammps')
 BUILDS_DIR = os.path.join(TEMPLATES_DIR, 'builds')
+POTENTIALS_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'potentials')
+
+LAMMPS_BASE_POTENTIALS_URL = 'https://raw.githubusercontent.com/lammps/lammps/refs/heads/stable/potentials'
 
 class YamlConfig:
     def __init__(self, yaml_file, output_directory):
@@ -22,6 +26,7 @@ class YamlConfig:
         # Create template and builds directories if they don't exists
         os.makedirs(os.path.dirname(TEMPLATE_FILE), exist_ok=True)
         os.makedirs(BUILDS_DIR, exist_ok=True)
+        os.makedirs(POTENTIALS_DIR, exist_ok=True)
         os.makedirs(self.output_directory, exist_ok=True)
 
     def get_output_filename(self):
@@ -90,15 +95,37 @@ class YamlConfig:
         self.analysis_output_path = analysis_path
         
         return analysis_path
+    
+    def check_material_potential(self):
+        potential = self.config['system']['material']['potential']
+        if os.path.isfile(potential):
+            print(f'Using {potential} potential provided from configuration.')
+            return
+        path_parts = potential.split('/')
+        filename = path_parts[-1]
+        print(f'{potential} not found, is it a relative path? Searching for the potential "{filename}" in the LAMMPS repository...')
+        req = requests.get(f'{LAMMPS_BASE_POTENTIALS_URL}/{filename}')
+        # Check if it's downloadable
+        content_type = req.headers['content-type'].lower()
+        is_downloadable = not ('text' in content_type or 'html' in content_type)
+        if req.status_code != 200 or is_downloadable:
+            print(f"The potential was not found in the repository. There's nothing I can do for you. Download the potential you want to use and specify the absolute path to the file.")
+            sys.exit(1)
+        potential_file_path = f'{POTENTIALS_DIR}/{filename}'
+        with open(potential_file_path, 'wb') as potential_file:
+            potential_file.write(req.content)
+        print(f'Potential downloaded and saved to {potential_file_path} successfully.')
 
     def render_template(self):
         if not self.config:
             print('No configuration loaded. Call load_config() first.')
             return False
         
+        self.check_material_potential()
+        
         # Get the output filename first
         self.get_output_filename()
-
+        
         # Create analysis output path
         analysis_path = self.create_analysis_output_path()
         

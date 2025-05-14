@@ -97,7 +97,7 @@ variable initial_z_upper equal xcm(upper_plane_group,z)
 variable current_z_upper equal ${initial_z_upper}
 
 # Parameters for approach - adjust for precision vs. speed
-variable approach_rate equal 0.002
+variable approach_rate equal {{ simulation.approach_rate }}
 variable displace_increment equal ${approach_rate}
 
 # Setup for force monitoring only
@@ -121,7 +121,7 @@ label loop_approach
   variable current_z_upper equal xcm(upper_plane_group,z)
   
   # Run a short simulation to let the system adjust
-  run 100
+  run {{ approach.relaxation_steps }}
   
   # Calculate change in force for contact detection
   variable fz_change equal abs((${fz} - ${prev_fz})/${displace_increment})

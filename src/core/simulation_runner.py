@@ -7,20 +7,6 @@ import logging
 import time
 
 class SimulationRunner:
-    '''
-    A comprehensive wrapper for running LAMMPS molecular dynamics simulations with optimizations.
-    
-    This class automatically detects hardware capabilities, analyzes input files,
-    and applies optimizations to improve simulation performance, particularly
-    for GPU-accelerated runs.
-    
-    Features:
-    - Automatic GPU detection and parameter optimization
-    - Input file analysis and optimization
-    - Hardware-specific tuning for improved performance
-    - Automatic fallback mechanisms for failed simulations
-    - Performance profiling and bottleneck detection
-    '''
     def __init__(
         self,
         simulation_file: str,
