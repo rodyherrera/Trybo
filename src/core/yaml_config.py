@@ -15,7 +15,20 @@ POTENTIALS_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'potentials')
 LAMMPS_BASE_POTENTIALS_URL = 'https://raw.githubusercontent.com/lammps/lammps/refs/heads/stable/potentials'
 
 class YamlConfig:
+    '''
+    YamlConfig handles loading a YAML configuration file, ensuring necessary
+    directories exist, fetching LAMMPS potentials if needed, and rendering
+    a Jinja2 template to generate a LAMMPS input script.
+    '''
+
     def __init__(self, yaml_file, output_directory):
+        '''
+        Initialize YamlConfig with paths for YAML input and output directory.
+
+        Args:
+            yaml_file: Path to the YAML configuration file.
+            output_directory: Directory where generated files will be written.
+        '''
         self.yaml_file = yaml_file
         self.output_directory = output_directory
         self.config = None
@@ -24,27 +37,38 @@ class YamlConfig:
         self.ensure_output_directories()
 
     def ensure_output_directories(self):
-        # Create template and builds directories if they don't exists
+        '''
+        Create required directories for templates, builds, potentials, and output.
+        '''
         os.makedirs(os.path.dirname(TEMPLATE_FILE), exist_ok=True)
         os.makedirs(BUILDS_DIR, exist_ok=True)
         os.makedirs(POTENTIALS_DIR, exist_ok=True)
         os.makedirs(self.output_directory, exist_ok=True)
 
     def get_output_filename(self):
-        # Determine output filename from YAML
+        '''
+        Determine the LAMMPS script filename based on the 'simulation.name' field.
+        Falls back to a default name if not specified.
+
+        Returns:
+            The generated output filename ending in '.lammps'.
+        '''
         if self.config and 'simulation' in self.config and 'name' in self.config['simulation']:
-            # Convert name to a valid filename by removing characters and replacecing spaces with underscores
-            output_filename = self.config['simulation']['name'].lower().replace(' ', '_')
-            # Remove non-alphanumeric characters except undescore and hyphens
-            output_filename = ''.join(character for character in output_filename if character.isalnum() or character in ['_', '-'])
-            output_filename += '.lammps'
+            name = self.config['simulation']['name'].lower().replace(' ', '_')
+            sanitized = ''.join(c for c in name if c.isalnum() or c in ['_', '-'])
+            filename = f'{sanitized}.lammps'
         else:
-            # Default name if not defined in YAML
-            output_filename = 'generated_simulation.lammps'
-        self.output_filename = output_filename
-        return self.output_filename
+            filename = 'generated_simulation.lammps'
+        self.output_filename = filename
+        return filename
     
     def load_config(self):
+        '''
+        Load the YAML configuration into memory.
+
+        Returns:
+            True if loading succeeds, False otherwise.
+        '''
         if not os.path.exists(self.yaml_file):
             print(f'YAML configuration file not found: {self.yaml_file}')
             return False
@@ -64,11 +88,11 @@ class YamlConfig:
             return False
 
     def create_analysis_output_path(self):
-        """
+        '''
         Create the analysis output path with the structure:
         /project_root/analysis_results/[project_name]/[timestamp]/
         Returns the created path.
-        """
+        '''
         # Get project name from filename (without extension)
         if not self.output_filename:
             self.get_output_filename()
@@ -98,11 +122,20 @@ class YamlConfig:
         return analysis_path
 
     def _extract_filename_from_potential_path(self):
+        '''
+        Extract the basename of the potential file defined in the config.
+        '''
         potential = self.config['system']['material']['potential']
         filename = os.path.basename(potential)
         return filename
     
     def _fetch_potential_from_lammps_repo(self):
+        '''
+        Download a potential file from the official LAMMPS repository.
+
+        Raises:
+            RuntimeError: If the potential cannot be found remotely.
+        '''
         potential_filename = self._extract_filename_from_potential_path()
         print(f'Searching for the potential "{potential_filename}" in the LAMMPS repository...')
 
@@ -119,6 +152,9 @@ class YamlConfig:
         print(f'Potential downloaded and saved to {potential_file_path} successfully.')
         
     def check_material_potential(self):
+        '''
+        Ensure the material potential path is valid, otherwise fetch it.
+        '''
         potential = self.config['system']['material']['potential']
         if os.path.isfile(potential):
             print(f'Using {potential} potential provided from configuration.')
@@ -127,6 +163,12 @@ class YamlConfig:
         self._fetch_potential_from_lammps_repo()
 
     def render_template(self):
+        '''
+        Render the Jinja2 template using loaded config and write output files.
+
+        Returns:
+            True on success, False on failure.
+        '''
         if not self.config:
             print('No configuration loaded. Call load_config() first.')
             return False
@@ -178,6 +220,15 @@ class YamlConfig:
             return False
     
     def get_simulation_file_path(self) -> str:
+        '''
+        Return the absolute path to the generated LAMMPS script, validating safety.
+
+        Returns:
+            Absolute file path of the simulation script.
+
+        Raises:
+            ValueError: If the path is outside the intended output directory.
+        '''
         # Make sure the output_filename is set
         if not self.output_filename:
             self.get_output_filename()
@@ -194,7 +245,10 @@ class YamlConfig:
         
         return simulation_file_path
     
-    def get_analysis_output_path(self):
+    def get_analysis_output_path(self) -> str:
+        '''
+        Return the analysis output directory, creating it if necessary.
+        '''
         if not self.analysis_output_path:
             self.create_analysis_output_path()
         return self.analysis_output_path
