@@ -12,7 +12,6 @@ class SimulationRunner:
         simulation_file: str,
         lammps_executable = './lammps/build/lmp',
         log_level = logging.INFO,
-        profile = False,
         optimize_input = True
     ):
         '''
@@ -30,7 +29,6 @@ class SimulationRunner:
         
         self.simulation_file = simulation_file
         self.lammps_executable = lammps_executable
-        self.profile = profile
         self.optimize_input = optimize_input
         
         self.start_time = 0
@@ -541,11 +539,8 @@ class SimulationRunner:
             original_input = self.simulation_file
             if optimized_input != original_input:
                 self.simulation_file = optimized_input
-            
-            if self.profile:
-                success = self.run_simulation_with_profiling()
-            else:
-                success = self.run_simulation()
+                
+            success = self.run_simulation()
             
             self._analyze_profiling_results()
             
@@ -559,42 +554,6 @@ class SimulationRunner:
             self.logger.error(f'Unexpected error: {str(e)}')
             return False
     
-    def run_simulation_with_profiling(self) -> bool:
-        '''
-        Run simulation with performance profiling enabled.
-        
-        Creates a temporary input file with added profiling commands
-        and executes the simulation with those modifications.
-        
-        Returns:
-            bool: True if simulation completed successfully, False otherwise
-        '''
-        try:
-            with open(self.simulation_file, 'r') as f:
-                content = f.readlines()
-            
-            profile_file = f"{os.path.splitext(self.simulation_file)[0]}_profile.in"
-            with open(profile_file, 'w') as f:
-                f.write('# Profiling version\n')
-                f.write('timer timeout 60 every 100\n')
-                f.write('variable t equal time\n')
-                f.write('thermo_style custom step temp press pe ke etotal v_t\n')
-                
-                for line in content:
-                    if line.strip().startswith('thermo '):
-                        f.write('thermo 100\n')
-                    else:
-                        f.write(line)
-            
-            original_file = self.simulation_file
-            self.simulation_file = profile_file
-            
-            self.logger.info('Running with performance profiling enabled')
-            result = self.run_simulation()
-            
-            self.simulation_file = original_file
-            
-            return result
         except Exception as e:
             self.logger.error(f'Error in profiling: {str(e)}')
             return self.run_simulation()
