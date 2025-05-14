@@ -1,5 +1,6 @@
 from core.base_parser import BaseParser
 import numpy as np
+import cupy as cp
 
 class HotspotAnalyzer:
     def __init__(self, parser: BaseParser):
@@ -13,38 +14,38 @@ class HotspotAnalyzer:
         return x, y, z, ke_values, is_hotspot
     
     def get_hotspot_stats(self, timestep_idx=-1):
-        _, _, _, ke_values, is_hotspot = self.get_hotspot_data(timestep_idx)
-        total_atoms = len(ke_values)
-        hotspot_count = np.sum(is_hotspot > 0)
-        hotspot_ratio = (hotspot_count / total_atoms) * 100 if total_atoms > 0 else 0
-        average_energy = np.mean(ke_values)
-        hotspot_mask = is_hotspot > 0
-        if np.any(hotspot_mask):
-            hotspot_average_energy = np.mean(ke_values[hotspot_mask])
-        else:
-            hotspot_average_energy = 0
-        max_energy = np.max(ke_values)
+        _, _, _, ke_np, mask_np = self.get_hotspot_data(timestep_idx)
+        ke_gpu = cp.asarray(ke_np, dtype=cp.float64)
+        mask_gpu = cp.asarray(mask_np, dtype=cp.bool_)
+        total = ke_gpu.size
+        hotspot_cnt = int(cp.sum(mask_gpu).get())
+        hotspot_pct = hotspot_cnt / total * 100 if total else 0.8
+        average_energy = float(cp.mean(ke_gpu).get())
+        max_energy = float(cp.max(ke_gpu).get())
+        hotspot_average = float(cp.mean(ke_gpu[mask_gpu]).get()) if hotspot_cnt else 0.0
         return {
-            'total_atoms': total_atoms,
-            'hotspot_count': hotspot_count,
-            'hotspot_ratio': hotspot_ratio,
+            'total_atoms': total,
+            'hotspot_count': hotspot_cnt,
+            'hotspot_ratio': hotspot_pct,
             'average_energy': average_energy,
-            'hotspot_average_energy': hotspot_average_energy,
+            'hotspot_average_energy': hotspot_average,
             'max_energy': max_energy
         }
     
     def get_energy_distribution(self, timestep_idx=-1, bins=50):
-        _, _, _, ke_values, is_hotspot = self.get_hotspot_data(timestep_idx)
-        histogram_values, energy_bins = np.histogram(ke_values, bins=bins)
-        histogram_normalized = (histogram_values / len(ke_values)) * 100
-        # Estimate threshold used for hotspot detection
-        # in the LAMMPS script it was defined as a multiple of kB*T
-        if np.any(is_hotspot  > 0):
-            min_hotspot_energy = np.min(ke_values[is_hotspot > 0])
-            threshold = min_hotspot_energy
+        _, _, _, ke_np, mask_np = self.get_hotspot_data(timestep_idx)
+        ke_gpu = cp.asarray(ke_np, dtype=cp.float64)
+        histogram_gpu, bin_edges_gpu = cp.histogram(ke_gpu, bins=bins)
+        histogram = cp.asnumpy(histogram_gpu)
+        bin_edges = cp.asnumpy(bin_edges_gpu)
+        norm_pct = histogram / histogram.sum() * 100 if histogram.sum() else histogram
+        # threshold used in LAMMPS, minimum hotspot energy
+        mask_gpu = cp.asarray(mask_np, dtype=cp.bool_)
+        if cp.any(mask_gpu):
+            threshold = float(cp.min(ke_gpu[mask_gpu]).get())
         else:
             threshold = None
-        return energy_bins, histogram_values, histogram_normalized, threshold
+        return bin_edges, histogram, norm_pct, threshold
 
     def get_hotspot_evolution(self):
         timesteps = self.parser.get_timesteps()

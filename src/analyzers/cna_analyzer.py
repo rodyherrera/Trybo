@@ -1,4 +1,5 @@
 from core.base_parser import BaseParser
+import cupy as cp
 import numpy as np
 
 class CommonNeighborAnalysisAnalyzer:
@@ -17,42 +18,37 @@ class CommonNeighborAnalysisAnalyzer:
         self.structure_names = {
             0: 'Unknown/Disordered',
             1: 'FCC',
-            2: 'BCC',
+            2: 'HCP',
             3: 'BCC',
             4: 'ICO',
             5: 'Other'
         }
     
     def get_cna_data(self):
-        data = self.parser.get_data()
         cna_data = []
-        for timestep_data in data:
-            cna_values = self.parser.get_analysis_data('cna', i)
-            cna_data.append(cna_values)
+        for i in range(len(self.parser.get_timesteps())):
+            cna_data.append(self.parser.get_analysis_data('cna', i))
         return cna_data
     
     def get_structure_counts(self, timestep_idx=-1):
-        data = self.parser.get_data()
         cna_values = self.parser.get_analysis_data('cna', timestep_idx)
-        # Ocurrences of each structure type
-        unique, counts = np.unique(cna_values, return_counts=True)
-        structure_counts = dict(zip(unique, counts))
-        return structure_counts
+        cna_gpu = cp.asarray(cna_values, dtype=cp.int32)
+        counts_gpu = cp.bincount(cna_gpu, minlength=6)
+        counts = cp.asnumpy(counts_gpu)
+        return { i: int(counts[i]) for i in range(counts.shape[0]) }
     
     def get_structure_evolution(self):
-        data = self.parser.get_data()
         timesteps = self.parser.get_timesteps()
-        evolution = { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [] }
+        all_counts = []
         for i in range(len(timesteps)):
-            counts = self.get_structure_counts(i)
-            total_atoms = sum(counts.values())
-            # Fill in structure percentages, default to 0 if not present
-            for structure_type in range(6):
-                if structure_type in counts:
-                    evolution[structure_type].append(counts[structure_type] / total_atoms * 100)
-                else:
-                    evolution[structure_type].append(0)
-        return evolution
+            cna_np = self.parser.get_analysis_data('cna', i)
+            cna_gpu = cp.asarray(cna_np, dtype=cp.int32)
+            all_counts.append(cp.bincount(cna_gpu, minlength=6))
+        counts_matrix = cp.stack(all_counts)
+        totals = counts_matrix.sum(axis=1, keepdims=True)
+        pct_gpu = counts_matrix / totals * 100
+        pct = cp.asnumpy(pct_gpu)
+        return { t: pct[:, t].tolist() for t in range(6) }
     
     def get_structure_percentages(self, timestep_idx=-1):
         counts = self.get_structure_counts(timestep_idx)
@@ -70,8 +66,6 @@ class CommonNeighborAnalysisAnalyzer:
         return x, y, z, cna
     
     def compare_structures(self, timestep_idx1=0, timestep_idx2=-1):
-        data = self.parser.get_data()
-        
         structure_counts1 = self.get_structure_counts(timestep_idx1)
         structure_counts2 = self.get_structure_counts(timestep_idx2)
 

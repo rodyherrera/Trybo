@@ -99,7 +99,6 @@ class CentroSymmetricAnalyzer:
         return defect_data, defect_mask
 
     def calculate_defect_profile(self, timestep_idx=-1, axis='z', n_bins=20):
-        timesteps = self.parser.get_timesteps()
         data = self.parser.get_data(timestep_idx)
         atoms_spatial_coordinates = self.parser.get_atoms_spatial_coordinates(data)
         coords = get_data_from_coord_axis(axis, atoms_spatial_coordinates)

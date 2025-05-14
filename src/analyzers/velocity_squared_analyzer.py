@@ -1,6 +1,7 @@
 from core.base_parser import BaseParser
 from utilities.analyzer import get_data_from_coord_axis
 import numpy as np
+import cupy as cp
 
 class VelocitySquaredAnalyzer:
     def __init__(self, parser: BaseParser):
