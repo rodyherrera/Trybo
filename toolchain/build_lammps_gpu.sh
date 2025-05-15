@@ -26,7 +26,7 @@ echo "CUDA installed successfully: $(nvcc --version | head -n1)"
 
 echo "Cloning LAMMPS from GitHub..."
 if [ ! -d "lammps" ]; then
-    git clone --depth=1 https://github.com/lammps/lammps.git
+    git clone --depth=1 https://github.com/lammps/lammps.git -b stable
 else
     echo "LAMMPS directory already exists. Updating..."
     cd lammps

@@ -244,7 +244,7 @@ class SimulationRunner:
         cmd = []
         
         if params['mpi_processes'] > 1 and self._check_command_exists('mpirun'):
-            cmd = ['mpirun', '-np', str(params['mpi_processes'])]
+            cmd = ['mpirun', '-np', '2']
             
             if self._check_command_exists('numactl'):
                 cmd = ['numactl', '--localalloc'] + cmd
