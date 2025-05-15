@@ -4,6 +4,8 @@ simulation:
     dump_frequency: 500
     analysis_dump_frequency: 1000
     timesteps: 5000
+    control_method: 'fixed'
+    normal_load: 312.0
     timesteps_size: 0.001
     restart_frequency: 50000
     thermo_frequency: 1000

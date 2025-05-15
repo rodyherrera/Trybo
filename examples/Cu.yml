@@ -1,6 +1,10 @@
 simulation:
     name: 'Copper Nanoparticle Wear Analysis'
     description: 'Simulation of copper nanoparticle wear on a crystalline surface'
+    # approach or fixed
+    control_method: 'fixed'
+    # only with fixed control_method
+    normal_load: 312.0
     dump_frequency: 100
     analysis_dump_frequency: 1000
     timesteps: 5000

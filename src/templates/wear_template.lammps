@@ -23,7 +23,7 @@ lattice fcc {{ system.material.lattice }}
 region simulation_box block {{ system.box_dimensions[0] }} {{ system.box_dimensions[1] }} {{ system.box_dimensions[2] }} {{ system.box_dimensions[3] }} {{ system.box_dimensions[4] }} {{ system.box_dimensions[5] }}
 create_box 1 simulation_box
 
-# Mass for Cu
+# Mass for material
 mass 1 {{ system.material.mass }}
 
 # Lower plane
@@ -97,53 +97,51 @@ fix nve_mobile mobile_group nve
 # A soft thermostat for the nanoparticle prevents localized overheating
 fix thermo_nano nanoparticle_group langevin {{ dynamics.thermostat.nanoparticle.temperature }} {{ dynamics.thermostat.nanoparticle.temperature }} {{ dynamics.thermostat.nanoparticle.damping }} {{ dynamics.thermostat.nanoparticle.seed }}
 compute normal_force nanoparticle_group group/group upper_plane_group
-variable fz          equal c_normal_force[3]
-variable prev_fz     equal 0.0
-variable displ       equal {{ simulation.approach_rate }}
-variable thresh1     equal 1e4    # umbral para ΔFz/Δz
-variable thresh2     equal 0.5    # umbral absoluto en eV/Å
-variable initial_z_upper equal xcm(upper_plane_group,z)
-variable current_z_upper equal ${initial_z_upper}
 
-run 0
+{% if simulation.control_method == "approach" %}
+    variable fz equal c_normal_force[3]
+    variable prev_fz equal 0.0
+    variable displ equal {{ simulation.approach_rate }}
+    variable thresh1 equal 1e4
+    variable thresh2 equal 0.5
+    variable initial_z_upper equal xcm(upper_plane_group,z)
+    variable current_z_upper equal ${initial_z_upper}
 
-label loop
-  displace_atoms upper_plane_group move 0.0 0.0 -${displ}
-  run 5000
+    run 0
 
-  variable fz_new    equal c_normal_force[3]
+    label loop
+        displace_atoms upper_plane_group move 0.0 0.0 -${displ}
+        run 5000
 
-  variable fz_change equal abs(v_fz_new-v_prev_fz)/v_displ
+        variable fz_new    equal c_normal_force[3]
 
-  variable prev_fz   equal v_fz_new
+        variable fz_change equal abs(v_fz_new-v_prev_fz)/v_displ
 
-  print "Step $(step) Fz = ${fz_new}, dFz/dz = ${fz_change}"
+        variable prev_fz   equal v_fz_new
 
-  variable contact equal (v_fz_new>v_thresh2)||(v_fz_change>v_thresh1)
-  if "${contact} == 0" then "jump SELF loop"
+        print "Step $(step) Fz = ${fz_new}, dFz/dz = ${fz_change}"
 
-print "Contact detected: Fz_contact = ${fz} eV/A at Z = ${current_z_upper}"
-variable fz_contact equal v_fz
+        variable contact equal (v_fz_new>v_thresh2)||(v_fz_change>v_thresh1)
+        if "${contact} == 0" then "jump SELF loop"
+
+        print "Contact detected: Fz_contact = ${fz} eV/A at Z = ${current_z_upper}"
+        variable fz_contact equal v_fz
+{% else %}
+    variable fz_contact equal {{ simulation.normal_load }}
+{% endif %}
 
 variable fz_nanoparticle_upper_plane equal c_normal_force[3]
 variable fx_nanoparticle_upper_plane equal c_normal_force[1]
 
-compute force_grp nanoparticle_group group/group upper_plane_group
+variable total_load equal ${fz_contact}
+variable upper_plane_atoms equal count(upper_plane_group)
+variable per_atom equal v_total_load/v_upper_plane_atoms
 
-variable fz_nanop equal c_force_grp[3]
-variable fx_nanop equal c_force_grp[1]
-
-variable normal_load equal ${fz_contact}
-
-variable n_atoms  equal count(upper_plane_group)
-variable per_atom equal v_normal_load/v_n_atoms
-
-variable abs_fz equal abs(v_fz_nanop)
-variable fz_diff equal v_abs_fz-v_per_atom
-variable shift equal 0.5*v_fz_diff+sqrt(0.25*v_fz_diff*v_fz_diff+1e-4)
+variable absolute_fz_nanoparticle_upper_plane equal abs(v_fz_nanoparticle_upper_plane)
+variable fz_difference equal absolute_fz_nanoparticle_upper_plane-v_per_atom
+variable shift equal 0.5*v_fz_difference+sqrt(0.25*v_fz_difference*v_fz_difference+1e-4)
 variable fz_safe equal v_per_atom+v_shift
-
-variable coef_fric equal abs(v_fx_nanop/v_fz_safe)
+variable coef_friction equal abs(v_fx_nanoparticle_upper_plane/v_fz_safe)
 
 fix load_fixed upper_plane_group addforce 0.0 0.0 -${per_atom}
 variable amplitude equal {{ dynamics.oscillation.amplitude }}
@@ -155,11 +153,6 @@ variable y_pos equal 0.0
 variable z_pos equal 0.0
 
 fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NULL NULL NULL units box
-
-# Upper limit to avoid extreme peaks
-variable coef_diff equal v_coefficient_friction-1.0
-variable coef_shift equal 0.5*(v_coef_diff+sqrt(v_coef_diff*v_coef_diff+0.0001))
-variable coefficient_friction_capped equal v_coefficient_friction-v_coef_shift
 
 # Identify structural defects (direct indicator of wear)
 compute center_symmetric all centro/atom 12
