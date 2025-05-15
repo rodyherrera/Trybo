@@ -1,0 +1,11 @@
+# Material Transfer Analysis between Top and Bottom Surfaces
+group initial_lower_group region lower_plane
+group initial_upper_group region upper_plane
+
+group current_lower_group dynamic all region lower_plane every 5000
+group current_upper_group dynamic all region upper_plane every 5000
+
+variable transferred_to_lower_group equal count(current_lower_group)-count(initial_lower_group)
+variable transferred_to_upper_group equal count(current_upper_group)-count(initial_upper_group)
+
+fix material_transfer all ave/time 5000 1 5000 v_transferred_to_lower_group v_transferred_to_upper_group

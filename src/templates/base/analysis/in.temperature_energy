@@ -1,0 +1,21 @@
+
+# Analysis of the Squared Velocity Calculation
+compute velocity_squared all property/atom vx vy vz
+variable velocity_squared_atom atom (c_velocity_squared[1]*c_velocity_squared[1]+c_velocity_squared[2]*c_velocity_squared[2]+c_velocity_squared[3]*c_velocity_squared[3])
+# dump temperature_related_dump all custom ${analysis_related_dump_frequency} ${output_directory}/velocity_squared.dump id type x y z v_velocity_squared_atom
+
+# Identify and monitor the fragments (debris)
+compute cluster all cluster/atom {{ thresholds.cluster_cutoff }}
+# dump debris_dump all custom ${analysis_related_dump_frequency} ${output_directory}/debris_clusters.dump id type x y z c_cluster
+
+# Calculate and save the total energy per atom for the mobile group
+variable total_energy atom c_ke_mobile+c_pe_mobile
+
+
+# Monitor the number of atoms in the nanoparticle cluster over time
+variable contact_count equal "count(nanoparticle_group)"
+fix contact_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} v_contact_count
+
+# Radial Distribution Function (RDF) for analyzing atomic structure
+compute radial_distribution_function all rdf 100 1 1
+fix radial_distribution_function_output all ave/time 5000 1 5000 c_radial_distribution_function[*] mode vector

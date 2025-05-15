@@ -1,0 +1,17 @@
+{% include 'in.system' %}
+{% include 'in.geometry' %}
+{% include 'in.potentials_and_minimization' %}
+{% include 'in.groups_and_restrictions' %}
+{% include 'in.thermal_conditions' %}
+{% include 'in.contact_and_approach' %}
+{% include 'in.load_friction' %}
+{% include 'analysis/in.estructural' %}
+{% include 'analysis/in.temperature_energy' %}
+{% include 'analysis/in.stats' %}
+{% include 'analysis/in.hotspots' %}
+{% include 'analysis/in.material_transfer' %}
+{% include 'analysis/in.coordination_and_structure' %}
+{% include 'in.stats_and_data_output' %}
+
+# Run
+run {{ run.production_steps }}

@@ -1,0 +1,23 @@
+# Identify structural defects (direct indicator of wear)
+compute center_symmetric all centro/atom 12
+# dump center_symmetric_dump all custom ${analysis_related_dump_frequency} ${output_directory}/center_symmetric.dump id type x y z c_center_symmetric
+
+variable deformation_threshold equal {{ thresholds.deformation }}
+compute center_symmetric_sumsq all reduce sumsq c_center_symmetric
+
+compute center_symmetric_average all reduce ave c_center_symmetric
+variable center_symmetric_sum equal c_center_symmetric_average*count(all)
+variable total_struct_atoms equal count(all)
+variable center_symmetric_std equal sqrt(c_center_symmetric_sumsq/v_total_struct_atoms-c_center_symmetric_average*c_center_symmetric_average)
+variable defect_percent equal 100.0*(c_center_symmetric_average/v_deformation_threshold)
+
+# Common Neighbor Analysis (CNA)
+group cna_group subtract all lower_plane_group upper_plane_group
+
+compute cna cna_group cna/atom {{ thresholds.cna_cutoff }}
+# dump cna_dump all custom ${analysis_related_dump_frequency} ${output_directory}/cna.dump id type x y z c_cna
+
+# Von mises stress calculation
+compute vonmises all stress/atom NULL
+variable atoms_stress atom sqrt((c_vonmises[1]-c_vonmises[2])*(c_vonmises[1]-c_vonmises[2])+(c_vonmises[2]-c_vonmises[3])*(c_vonmises[2]-c_vonmises[3])+(c_vonmises[3]-c_vonmises[1])*(c_vonmises[3]-c_vonmises[1])+6.0*(c_vonmises[4]*c_vonmises[4]+c_vonmises[5]*c_vonmises[5]+c_vonmises[6]*c_vonmises[6]))/2.0
+# dump vonmises_dump all custom ${analysis_related_dump_frequency} ${output_directory}/vonmises.dump id type x y z v_atoms_stress

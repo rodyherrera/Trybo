@@ -1,0 +1,26 @@
+
+# Simulation box 
+lattice fcc {{ system.material.lattice }}
+region simulation_box block {{ system.box_dimensions[0] }} {{ system.box_dimensions[1] }} {{ system.box_dimensions[2] }} {{ system.box_dimensions[3] }} {{ system.box_dimensions[4] }} {{ system.box_dimensions[5] }}
+create_box 1 simulation_box
+
+# Mass for material
+mass 1 {{ system.material.mass }}
+
+# Lower plane
+region lower_plane block {{ regions.lower_plane[0] }} {{ regions.lower_plane[1] }} {{ regions.lower_plane[2] }} {{ regions.lower_plane[3] }} {{ regions.lower_plane[4] }} {{ regions.lower_plane[5] }}
+create_atoms 1 region lower_plane
+
+# Upper plane 
+region upper_plane block {{ regions.upper_plane[0] }} {{ regions.upper_plane[1] }} {{ regions.upper_plane[2] }} {{ regions.upper_plane[3] }} {{ regions.upper_plane[4] }} {{ regions.upper_plane[5] }}
+create_atoms 1 region upper_plane
+
+# Nanoparticle
+region nanoparticle sphere {{ regions.nanoparticle[0] }} {{ regions.nanoparticle[1] }} {{ regions.nanoparticle[2] }} {{ regions.nanoparticle[3] }}
+create_atoms 1 region nanoparticle
+
+# Groups
+group lower_plane_group region lower_plane
+group nanoparticle_group region nanoparticle
+group upper_plane_group region upper_plane
+group mobile_group subtract all lower_plane_group upper_plane_group

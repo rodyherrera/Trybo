@@ -8,7 +8,7 @@ import sys
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATES_DIR = os.path.join(SCRIPT_DIR, '..', 'templates')
-TEMPLATE_FILE = os.path.join(TEMPLATES_DIR, 'wear_template.lammps')
+TEMPLATE_FILE = os.path.join(TEMPLATES_DIR, 'base', 'in.main')
 BUILDS_DIR = os.path.join(TEMPLATES_DIR, 'builds')
 POTENTIALS_DIR = os.path.join(SCRIPT_DIR, '..', '..', 'potentials')
 

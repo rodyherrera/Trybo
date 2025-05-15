@@ -1,0 +1,29 @@
+{% if simulation.control_method == "approach" %}
+    variable fz equal c_normal_force[3] 
+    variable prev_fz equal 0.0
+    variable displ equal {{ approach.approach_rate }}
+    variable thresh1 equal 1e4
+    variable thresh2 equal 0.5
+    variable initial_z_upper equal xcm(upper_plane_group,z)
+
+    run 0
+
+    label loop
+        displace_atoms upper_plane_group move 0.0 0.0 -${displ}
+        run {{ approach.relaxation_steps }}
+
+        variable fz_new equal c_normal_force[3]
+        variable fz_change equal abs(v_fz_new-v_prev_fz)/v_displ
+        variable prev_fz equal v_fz_new
+
+        print "Step $(step) Fz = ${fz_new}, dFz/dz = ${fz_change}"
+
+        variable contact equal (v_fz_new>v_thresh2)||(v_fz_change>v_thresh1)
+        if "${contact} == 0" then "jump SELF loop"
+
+        variable z_upper_at_contact equal xcm(upper_plane_group,z)
+        print "Contact detected: Fz_contact = ${fz_new} eV/A at Z = ${z_upper_at_contact}"
+        variable fz_contact equal v_fz_new
+{% else %}
+    variable fz_contact equal {{ simulation.normal_load }}
+{% endif %}

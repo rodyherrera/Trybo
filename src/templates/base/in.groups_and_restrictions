@@ -1,0 +1,17 @@
+# Create bottom plane subgroups, only fix the lowest layer
+region bottom_layer block {{ regions.lower_plane[0] }} {{ regions.lower_plane[1] }} {{ regions.lower_plane[2] }} {{ regions.lower_plane[3] }} 0 1.0
+group fixed_bottom_layer region bottom_layer
+group flexible_bottom_layer subtract lower_plane_group fixed_bottom_layer
+
+# Fix only the lowest layer of the bottom plane
+fix hold_bottom_layer fixed_bottom_layer setforce 0.0 0.0 0.0
+
+# Computers for friction (sum of fx on upper planes)
+compute fx_upper_plane upper_plane_group reduce sum fx
+variable fx_upper_plane equal c_fx_upper_plane
+
+# Computes for energy and temperature (mobile_group atoms)
+compute ke_mobile mobile_group ke/atom
+compute pe_mobile mobile_group pe/atom
+compute temp_mobile mobile_group temp
+compute disp_nanoparticle nanoparticle_group displace/atom

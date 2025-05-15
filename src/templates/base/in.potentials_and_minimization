@@ -1,0 +1,16 @@
+# EAM potentials
+pair_style eam/gpu
+pair_coeff * * {{ system.material.potential }}
+
+delete_atoms overlap 0.3 nanoparticle_group upper_plane_group
+neigh_modify delay {{ neighbor.delay }} every {{ neighbor.every }} check {{ neighbor.check }} page {{ neighbor.page }} one {{ neighbor.one }} binsize {{ neighbor.binsize }}
+
+# Energy minimization (to relax initial structure)
+thermo_modify lost ignore
+min_style cg
+minimize {{ run.minimization.etol }} {{ run.minimization.ftol }} 5000 50000
+
+# Save nanoparticle IDs and initial positions
+dump nanoparticle_init nanoparticle_group custom 1 ${output_directory}/nanoparticle_init.txt id type x y z
+run 0
+undump nanoparticle_init

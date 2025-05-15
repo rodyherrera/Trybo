@@ -1,0 +1,6 @@
+# Identify hot spots caused by friction, impact, and deformation
+compute ke_hotspots all ke/atom
+variable hot_threshold equal "{{ thresholds.hotspot_factor }}*8.617e-5*{{ system.temperature }}"
+variable is_hotspot atom "c_ke_hotspots > v_hot_threshold"
+compute hotspots_count all reduce sum v_is_hotspot
+fix hotspot_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_hotspots_count

@@ -1,0 +1,12 @@
+# Calculate the coordination number for each atom
+compute coord all coord/atom cutoff {{ thresholds.coordination_cutoff }}
+# dump coord_dump all custom ${analysis_related_dump_frequency} ${output_directory}/coordination.dump id type x y z c_coord
+
+# Calculate statistics from coordination numbers
+compute coord_avg all reduce ave c_coord
+compute coord_min all reduce min c_coord
+compute coord_max all reduce max c_coord
+fix coord_stats all ave/time 5000 1 5000 c_coord_avg c_coord_min c_coord_max
+
+# Trajectory visualization with structure identifiers using PTM
+compute ptm all ptm/atom fcc {{ thresholds.ptm_cutoff }}

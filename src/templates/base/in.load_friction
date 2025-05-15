@@ -1,0 +1,24 @@
+
+variable fz_nanoparticle_upper_plane equal c_normal_force[3]
+variable fx_nanoparticle_upper_plane equal c_normal_force[1]
+
+variable total_load equal ${fz_contact}
+variable upper_plane_atoms equal count(upper_plane_group)
+variable per_atom equal v_total_load/v_upper_plane_atoms
+
+variable absolute_fz_nanoparticle_upper_plane equal abs(v_fz_nanoparticle_upper_plane)
+variable fz_difference equal absolute_fz_nanoparticle_upper_plane-v_per_atom
+variable shift equal 0.5*v_fz_difference+sqrt(0.25*v_fz_difference*v_fz_difference+1e-4)
+variable fz_safe equal v_per_atom+v_shift
+variable coef_friction equal abs(v_fx_nanoparticle_upper_plane/v_fz_safe)
+
+fix load_fixed upper_plane_group addforce 0.0 0.0 -${per_atom}
+variable amplitude equal {{ dynamics.oscillation.amplitude }}
+variable period equal {{ dynamics.oscillation.period }}
+variable omega equal 2.0*PI/v_period
+variable damp_factor equal {{ dynamics.oscillation.damping }}
+variable x_pos equal v_amplitude*sin(v_omega*step)*(1.0-v_damp_factor*sin(v_omega*step)*sin(v_omega*step))
+variable y_pos equal 0.0
+variable z_pos equal 0.0
+
+fix move_upper_plane upper_plane_group move variable v_x_pos v_y_pos v_z_pos NULL NULL NULL units box

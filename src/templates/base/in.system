@@ -1,0 +1,19 @@
+# System configuration
+units metal
+dimension 3
+boundary p p f
+atom_style atomic
+timestep {{ simulation.timesteps_size }}
+
+# Output directory setup
+variable output_directory string "{{ simulation.output_directory }}"
+shell mkdir ${output_directory}
+
+# Frequency used for trajectory.lammpstrj and nanoparticle_trajectory.lammpstrj
+variable dump_frequency equal {{ simulation.dump_frequency }}
+
+# Used for center_symmmetric_dump, cna_dump, vonmises_dump
+# tempereature_related_dump, energy_dump
+variable analysis_related_dump_frequency equal {{ simulation.analysis_dump_frequency }}
+
+package gpu 1 neigh yes split 1.0 binsize 2.8

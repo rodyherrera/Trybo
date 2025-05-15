@@ -1,0 +1,14 @@
+
+# Calculate the average and maximum values of the central symmetry parameter
+compute center_symmetric_max all reduce max c_center_symmetric
+
+# Calculate average and maximum values for von Mises stress values
+compute vonmises_average all reduce ave v_atoms_stress
+compute vonmises_max all reduce max v_atoms_stress
+
+# Calculation of the specific temperature of the nanoparticle
+compute velocity_squared_nanoparticle_average nanoparticle_group reduce ave v_velocity_squared_atom
+variable nanoparticle_temperature equal c_velocity_squared_nanoparticle_average*25.464
+
+# Periodically record indicators related to nanoparticle wear
+fix wear_monitor all ave/time {{ simulation.thermo_frequency }} 1 {{ simulation.thermo_frequency }} c_center_symmetric_average c_center_symmetric_max c_vonmises_average c_vonmises_max v_nanoparticle_temperature v_contact_count v_defect_percent

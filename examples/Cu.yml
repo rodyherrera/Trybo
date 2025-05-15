@@ -2,7 +2,7 @@ simulation:
     name: 'Copper Nanoparticle Wear Analysis'
     description: 'Simulation of copper nanoparticle wear on a crystalline surface'
     # approach or fixed
-    control_method: 'fixed'
+    control_method: 'approach'
     # only with fixed control_method
     normal_load: 312.0
     dump_frequency: 100
@@ -14,8 +14,8 @@ simulation:
     approach_rate: 0.00005
 
 approach:
-    approach_rate: 0.0001
-    relaxation_steps: 2000
+    approach_rate: 0.01
+    relaxation_steps: 500
 
 system:
     temperature: 300.0
